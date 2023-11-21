@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 
 class CBR:
-    def __init__(self, users):
+    def __init__(self, users): # users és una llista amb tots els casos (bossa de casos)
         self.users = users
     
     def __str__(self):
@@ -85,5 +85,11 @@ class CBR:
     
     def retain(self, user):
         """
-        
+        Calculem la similitud de cosinus i, si es tracta d'un cas diferent, l'afegim a la bossa de casos
         """
+        similarities = []
+        for u in self.users:
+            a = similarity(user, u, 'cosine')
+            similarities.append(a)
+        if np.average(similarities) <= 0.6:
+            self.users.append(user)
