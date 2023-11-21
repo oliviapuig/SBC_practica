@@ -61,6 +61,9 @@ class CBR:
         elif metric == "cosine":
             return cosine_similarity([user1.vector], [user2.vector])[0][0]
         
+    def make_clustering(self):
+        pass
+        
     def retrieve(self, user, metric):
         """
         Return 5 most similar users
