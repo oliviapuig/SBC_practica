@@ -13,13 +13,6 @@
 
 ### UTILS ###
 
-from sklearn.preprocessing import OneHotEncoder
-import numpy as np
-import pandas as pd
-from sklearn.cluster import KMeans
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.metrics import DistanceMetric
-
 class Usuari:
     def __init__(self, ind, attributes):
         self.ind = ind
@@ -45,3 +38,7 @@ class Usuari:
         for key, value in self.attributes.items():
             print(f"{key}: {value}")
         return ""
+    
+class Llibre:
+    def __init__(self):
+        pass
