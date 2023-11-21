@@ -1,3 +1,8 @@
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics import DistanceMetric
+import numpy as np
+from sklearn.preprocessing import OneHotEncoder
+
 class CBR:
     def __init__(self, users):
         self.users = users
