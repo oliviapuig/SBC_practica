@@ -13,13 +13,6 @@
 
 ### UTILS ###
 
-from sklearn.preprocessing import OneHotEncoder
-import numpy as np
-import pandas as pd
-from sklearn.cluster import KMeans
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.metrics import DistanceMetric
-
 class Usuari:
     def __init__(self, ind, attributes):
         self.ind = ind
@@ -37,11 +30,12 @@ class Usuari:
 
         self.vector = []
 
-        self.llibres_recomanats = []
-        self.puntuacio_llibres = []
+        self.llibres_recomanats = attributes["llibres_recomanats"]
+        self.puntuacio_llibres = attributes["puntuacio_llibres"]
     
     def __str__(self):
         print(f"User {self.ind}")
         for key, value in self.attributes.items():
             print(f"{key}: {value}")
         return ""
+    
