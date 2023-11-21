@@ -30,8 +30,8 @@ class Usuari:
 
         self.vector = []
 
-        self.llibres_recomanats = []
-        self.puntuacio_llibres = []
+        self.llibres_recomanats = attributes["llibres_recomanats"]
+        self.puntuacio_llibres = attributes["puntuacio_llibres"]
     
     def __str__(self):
         print(f"User {self.ind}")
@@ -39,6 +39,3 @@ class Usuari:
             print(f"{key}: {value}")
         return ""
     
-class Llibre:
-    def __init__(self):
-        pass

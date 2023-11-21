@@ -1,3 +1,4 @@
+from typing import Any
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import DistanceMetric
 import numpy as np
@@ -5,7 +6,8 @@ from sklearn.preprocessing import OneHotEncoder
 
 class CBR:
     def __init__(self, users): # users és una llista amb tots els casos (bossa de casos)
-        self.users = users
+        self.encoder = self.get_encoder()
+        self.users = self.transform_user_to_numeric(self.encoder, users)
     
     def __str__(self):
         for user in self.users:
@@ -32,13 +34,14 @@ class CBR:
         return encoder
     
     def transform_user_to_numeric(self, encoder, users):
+        print(users)
         for user in users:
             categorical_attributes = []
             numeric_attributes = []
             for key, value in user.attributes.items():
                 if isinstance(value, str):
                     categorical_attributes.append(value)
-                else:
+                elif isinstance(value, int):
                     numeric_attributes.append(value/100)
 
             transformed_categorical_data = encoder.transform([categorical_attributes])
@@ -64,7 +67,7 @@ class CBR:
         for u in self.users:
             similarities.append((u, self.similarity(user, u, metric)))
         similarities.sort(key=lambda x: x[1], reverse=True)
-        return similarities[:5]
+        return similarities[:1]
     
     def reuse(self, user, users):
         """
@@ -93,3 +96,11 @@ class CBR:
             similarities.append(a)
         if np.average(similarities) <= 0.6:
             self.users.append(user)
+
+    def recomana(self, user):
+        user = self.transform_user_to_numeric(self.encoder, [user])[0]
+        users = self.retrieve(user, "cosine")
+        user = self.reuse(user, users)
+        user = self.revise(user)
+        self.retain(user)
+        return user.llibres_recomanats
