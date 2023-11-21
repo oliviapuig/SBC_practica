@@ -30,11 +30,11 @@ except Exception as e:
     print(f"S'ha produït un error general: {e}")
     
 # canviar els noms de les columnes per el nom de la primera fila
-df = pd.read_csv('books_clean.csv')
+df = pd.read_csv(fitxer_csv_net)
 df.columns = df.iloc[0]
 df = df.drop(df.index[0])
 df = df.drop(df.columns[12], axis=1)
-df.to_csv('books_clean.csv', index=False)
+df.to_csv(fitxer_csv_net, index=False)
 
 # Afegir columnes amb valors aleatoris per cada punt mencionat
 for index, row in df.iterrows():
@@ -49,4 +49,4 @@ for index, row in df.iterrows():
     df.at[index, 'detall_cientific'] = random.choice(["baix", "mitja", "alta"])
 
 # Guardar la base de dades amb les noves columnes en un nou CSV
-df.to_csv("books_clean.csv", index=False)
+df.to_csv(fitxer_csv_net, index=False)
