@@ -3,6 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import DistanceMetric
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.cluster import KMeans
 
 
 class CBR:
@@ -61,8 +62,52 @@ class CBR:
         elif metric == "cosine":
             return cosine_similarity([user1.vector], [user2.vector])[0][0]
         
+    def __calculate_optimal_k(inertia, k_range):
+        """
+        Calcula el valor óptimo de K utilizando el método del codo automatizado.
+        :param inertia: Lista de valores de inercia para diferentes valores de K.
+        :param k_range: Rango de valores de K considerados.
+        :return: Valor óptimo de K.
+        """
+        # Coordenadas del primer y último punto
+        p1 = np.array([k_range[0], inertia[0]])
+        p2 = np.array([k_range[-1], inertia[-1]])
+
+        # Distancia de cada punto a la línea
+        distances = []
+        for k, iner in zip(k_range, inertia):
+            pk = np.array([k, iner])
+            line_vec = p2 - p1
+            point_vec = pk - p1
+            distance = np.abs(np.cross(line_vec, point_vec)) / np.linalg.norm(line_vec)
+            distances.append(distance)
+
+        # Encontrar el índice del valor máximo de la distancia
+        optimal_k_index = np.argmax(distances)
+        return k_range[optimal_k_index]
+    
     def make_clustering(self):
-        pass
+        # Número de usuarios
+        num_usuarios = 100
+
+        # Cada usuario tiene un vector de 13 posiciones
+        # Generamos datos aleatorios para simular estos vectores
+        np.random.seed(0)
+        user_vectors = np.random.uniform(-1, 1, (num_usuarios, 13))
+
+        # Método del codo para determinar el número óptimo de clusters
+        inertia = []
+        k_range = range(1, 11)
+        for k in k_range:
+            kmeans = KMeans(n_clusters=k, random_state=0).fit(user_vectors)
+            inertia.append(kmeans.inertia_)
+        
+        # Calcular el valor óptimo de K
+        optimal_k = self.__calculate_optimal_k(inertia, k_range)
+
+        # Realizar el clustering con el valor óptimo de K
+        kmeans = KMeans(n_clusters=int(optimal_k), random_state=0).fit(user_vectors)
+        return kmeans
         
     def retrieve(self, user, metric):
         """
