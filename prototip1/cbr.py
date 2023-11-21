@@ -3,7 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import DistanceMetric
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
-from utils import Usuari
+
 
 class CBR:
     def __init__(self, users): # users és una llista amb tots els casos (bossa de casos)
@@ -60,6 +60,9 @@ class CBR:
             return dist.pairwise([user1.vector], [user2.vector])[0][0]
         elif metric == "cosine":
             return cosine_similarity([user1.vector], [user2.vector])[0][0]
+        
+    def make_clustering(self):
+        pass
         
     def retrieve(self, user, metric):
         """
