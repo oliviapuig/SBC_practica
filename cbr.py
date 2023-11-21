@@ -3,6 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import DistanceMetric
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
+from utils import Usuari
 
 class CBR:
     def __init__(self, users): # users és una llista amb tots els casos (bossa de casos)
@@ -33,9 +34,9 @@ class CBR:
         encoder.fit([["realisme", "amor", "baixa", "simples", "baix", "accio", "curta", "actual", "baix"]])
         return encoder
     
-    def transform_user_to_numeric(self, encoder, users):
-        print(users)
-        for user in users:
+    def transform_user_to_numeric(self, encoder, usuaris_a_transformar):
+        llista_ususaris = []
+        for user in usuaris_a_transformar:
             categorical_attributes = []
             numeric_attributes = []
             for key, value in user.attributes.items():
@@ -48,8 +49,9 @@ class CBR:
             combined_data = np.hstack((numeric_attributes, transformed_categorical_data[0]))
 
             user.vector = combined_data
+            llista_ususaris.append(user)
 
-        return users
+        return llista_ususaris
     
     def similarity(self, user1, user2, metric):
         if metric == "hamming":
@@ -73,7 +75,7 @@ class CBR:
         """
         Agafar tots els llibres dels 5 usuaris més similars
         """
-        for u in users:
+        for u, sim in users:
             user.llibres_recomanats += u.llibres_recomanats
             user.puntuacio_llibres += u.puntuacio_llibres
         return user
