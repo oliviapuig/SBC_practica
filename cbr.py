@@ -89,7 +89,7 @@ class CBR:
         """
         similarities = []
         for u in self.users:
-            a = similarity(user, u, 'cosine')
+            a = self.similarity(user, u, 'cosine')
             similarities.append(a)
         if np.average(similarities) <= 0.6:
             self.users.append(user)
