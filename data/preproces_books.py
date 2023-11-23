@@ -1,6 +1,7 @@
 import csv
 import pandas as pd
 import random
+import numpy as np
 
 fitxer_csv = "books.csv"
 fitxer_csv_net = "books_clean.csv"
@@ -48,5 +49,15 @@ for index, row in df.iterrows():
     df.at[index, 'epoca'] = random.choice(["actual", "passada", "futura"])
     df.at[index, 'detall_cientific'] = random.choice(["baix", "mitja", "alta"])
 
+llibres_dummies = pd.get_dummies(df, columns=['estil_literari', 'temes_especifics', 'complexitat', 'caracteristiques', 'desenvolupament_del_personatge', 'accio_o_reflexio', 'longitud', 'epoca', 'detall_cientific'])
+# Eliminar totes les columnes que no siguin booleanes
+for column in llibres_dummies.columns:
+    if llibres_dummies[column].dtype != bool:
+        llibres_dummies = llibres_dummies.drop(column, axis=1)
+# Make vector of each book and add it to the dataframe
+vectors = np.array(llibres_dummies).astype(int)
+df["vector"] = vectors.tolist()
+
 # Guardar la base de dades amb les noves columnes en un nou CSV
 df.to_csv(fitxer_csv_net, index=False)
+df.to_pickle("books_clean.pkl")

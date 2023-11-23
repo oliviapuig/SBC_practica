@@ -1,0 +1,27 @@
+Utils:
+
+- Per crear la instància només necessitem 4 atributs al diccionari: "llibres_usuari", "val_llibres", "llibres_recomanats" i "puntuacio_llibres". 
+
+- Els atributs "llibres_usuari" i "val_llibres" són llistes de isbn13 i "val_llibres" i "puntuacio_llibres" són llistes de nombres (per ara int).
+
+- Afegit funció per escalar un vector o un nombre [0-5] al rang de -1 a 1.
+
+- Funció get_attributes que agafa els llibres en format pkl (IMPORTANT ja que així recuperem els atributs dels llibres en format original, es a dir, en una llista no com un string) i els va multiplicant per la valoració escalada i els suma al vector de l'ususari. Aquest vector final es posa a l'usuari com Usuari.vector.
+
+CBR:
+
+- Eliminació de get_encoder i transform_user_to_numeric ja que ara no necessitem OneHotEncoder ja que ja tenim el vector.
+
+- Afegim funció make_clustering que fa un cluster d'usuaris amb KMeans i per escollir la K optima utilitzem la funció __calculate_optimal_k que utilitze el mètode del coude per trobar la K optima.
+
+data/preproces_books.py:
+
+- Afegit:
+    llibres_dummies = pd.get_dummies(df, columns=['estil_literari', 'temes_especifics', 'complexitat', 'caracteristiques', 'desenvolupament_del_personatge', 'accio_o_reflexio', 'longitud', 'epoca', 'detall_cientific'])
+    # Eliminar totes les columnes que no siguin booleanes
+    for column in llibres_dummies.columns:
+        if llibres_dummies[column].dtype != bool:
+            llibres_dummies = llibres_dummies.drop(column, axis=1)
+    # Make vector of each book and add it to the dataframe
+    vectors = np.array(llibres_dummies).astype(int)
+    df["vector"] = vectors.tolist()
