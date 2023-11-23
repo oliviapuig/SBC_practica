@@ -9,6 +9,7 @@ class CBR:
     def __init__(self, users): # users és una llista amb tots els casos (bossa de casos)
         #self.encoder = self.get_encoder()
         #self.users = self.transform_user_to_numeric(self.encoder, users)
+        preproces_books()
         self.users = users
     
     def __str__(self):
