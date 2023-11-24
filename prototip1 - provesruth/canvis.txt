@@ -1,0 +1,2 @@
+usuaris.ipynb:
+    - creo un pkl amb les instancies d'usuari que contenen 'llibres_usuari','val_llibres', 'llibres_recomanats' i 'puntuacio_llibres'
