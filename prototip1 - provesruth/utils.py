@@ -19,7 +19,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 class Usuari:
     def __init__(self, ind, attributes):
-        self.ind = ind
+        self.id = ind
         self.attributes = attributes
 
         self.llibres_usuari = attributes["llibres_usuari"]
@@ -42,7 +42,7 @@ class Usuari:
         self.vector = self.get_attributes()
 
     def __str__(self):
-        print(f"User {self.ind}")
+        print(f"User {self.id}")
         for key, value in self.attributes.items():
             print(f"{key}: {value}")
         return ""
@@ -71,8 +71,8 @@ class Usuari:
             vector_usuari += np.array(llibres[llibres["isbn13"] == ll]["vector"].iloc[0]) * self.scale(val)
         #vector_usuari = self.scale(vector_usuari)
         #print("Vector usuari escalat: ", vector_usuari)
+        np.round(vector_usuari, 2)
 
-
-        return vector_usuari
+        return np.round(vector_usuari, 3)
     ### afegir ruth's metric
     

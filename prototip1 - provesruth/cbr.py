@@ -84,7 +84,7 @@ class CBR:
         for u in self.users:
             similarities.append((u, self.similarity(user, u, metric)))
         similarities.sort(key=lambda x: x[1], reverse=True)
-        return similarities[:1] #tupla de instancia d'usuari i similitud amb nou cas
+        return similarities[:2] #tupla de instancia d'usuari i similitud amb nou cas
     
     def reuse(self, users):
         """
