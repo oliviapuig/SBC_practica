@@ -71,7 +71,6 @@ class Usuari:
             vector_usuari += np.array(llibres[llibres["isbn13"] == ll]["vector"].iloc[0]) * self.scale(val)
         #vector_usuari = self.scale(vector_usuari)
         #print("Vector usuari escalat: ", vector_usuari)
-        np.round(vector_usuari, 2)
 
         return np.round(vector_usuari, 3)
     ### afegir ruth's metric
