@@ -1,9 +1,9 @@
-from typing import Any
+#from typing import Any
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import DistanceMetric
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder
-from utils import Usuari
+#from sklearn.preprocessing import OneHotEncoder
+#from utils import Usuari
 from sklearn.cluster import KMeans
 
 class CBR:

@@ -1,14 +1,16 @@
-from typing import Any
+#from typing import Any
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import DistanceMetric
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder
-from utils import Usuari
+#from sklearn.preprocessing import OneHotEncoder
+#from utils import Usuari
+from sklearn.cluster import KMeans
 
 class CBR:
     def __init__(self, users): # users és una llista amb tots els casos (bossa de casos)
         #self.encoder = self.get_encoder()
         #self.users = self.transform_user_to_numeric(self.encoder, users)
+        #preproces_books()
         self.users = users
     
     def __str__(self):
@@ -82,7 +84,7 @@ class CBR:
         for u in self.users:
             similarities.append((u, self.similarity(user, u, metric)))
         similarities.sort(key=lambda x: x[1], reverse=True)
-        return similarities[:1]
+        return similarities[:2] #tupla de instancia d'usuari i similitud amb nou cas
     
     def reuse(self, users):
         """
@@ -91,8 +93,8 @@ class CBR:
         llibres_recom = []
         puntuacions = []
         for u, sim in users:
-            llibres_recom += u.llibres_recomanats
-            puntuacions += u.puntuacio_llibres
+            llibres_recom += u.llibres_recomanats #afegeix a la llista els llibres recomanats de l'usuari similar
+            puntuacions += u.puntuacio_llibres #afegeix a la llista les puntuacions dels llibres recomanats de l'usuari similar
         return llibres_recom, puntuacions
     
     def revise(self, user, llibres_recom, puntuacions):
@@ -109,7 +111,7 @@ class CBR:
         """
         for llibre in user.llibres_recomanats:
             while True:
-                puntuacio = int(input(f"Quina puntuació li donaries al llibre {llibre}? (0-5) "))
+                puntuacio = int(input(f"Quina puntuació li donaries a la recomanació del llibre {llibre}? (0-5) "))
                 if puntuacio >= 0 and puntuacio <= 5 and isinstance(puntuacio, int):
                     break
                 else:
@@ -130,7 +132,6 @@ class CBR:
             self.users.append(user)
 
     def recomana(self, user):
-        #user = self.transform_user_to_numeric(self.encoder, [user])[0]
         users = self.retrieve(user, "cosine")
         ll, punt = self.reuse(users)
         user = self.revise(user, ll, punt)

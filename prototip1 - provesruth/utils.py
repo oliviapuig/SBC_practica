@@ -18,8 +18,9 @@ from sklearn.preprocessing import MinMaxScaler
 ### UTILS ###
 
 class Usuari:
-    def __init__(self, ind, attributes):
-        self.id = ind
+    def __init__(self, ide, attributes):
+        self.ind = ide
+
         self.attributes = attributes
 
         self.llibres_usuari = attributes["llibres_usuari"]
@@ -42,10 +43,13 @@ class Usuari:
         self.vector = self.get_attributes()
 
     def __str__(self):
-        print(f"User {self.id}")
+        print(f"User {self.get_id()}")
         for key, value in self.attributes.items():
             print(f"{key}: {value}")
         return ""
+    
+    def get_id(self):
+        return self.ind
     
     def scale(self, vector, min_ant = 0, max_ant = 5, min_nou = -1, max_nou = 1):
         """
@@ -72,6 +76,11 @@ class Usuari:
         #vector_usuari = self.scale(vector_usuari)
         #print("Vector usuari escalat: ", vector_usuari)
 
-        return np.round(vector_usuari, 3)
+        # Si hay vectores con valores entre -0.01 y 0.01, los ponemos a 0
+        for i in range(len(vector_usuari)):
+            if vector_usuari[i] < 0.01 and vector_usuari[i] > -0.01:
+                vector_usuari[i] = 0
+
+        return np.round(vector_usuari, 1)
     ### afegir ruth's metric
     
