@@ -45,7 +45,7 @@ class CBR:
         optimal_k_index = np.argmax(distances)
         return k_range[optimal_k_index]
     
-    def make_clustering(self):
+    def make_clustering(self,vectors_usuaris):
         # Número de usuarios
         num_usuarios = 100
 
@@ -58,14 +58,14 @@ class CBR:
         inertia = []
         k_range = range(1, 11)
         for k in k_range:
-            kmeans = KMeans(n_clusters=k, random_state=0, n_init=10).fit(user_vectors)
+            kmeans = KMeans(n_clusters=k, random_state=0, n_init=10).fit(vectors_usuaris)
             inertia.append(kmeans.inertia_)
         
         # Calcular el valor óptimo de K
         optimal_k = self.__calculate_optimal_k(inertia, k_range)
 
         # Realizar el clustering con el valor óptimo de K
-        kmeans = KMeans(n_clusters=int(optimal_k), random_state=0, n_init=10).fit(user_vectors)
+        kmeans = KMeans(n_clusters=int(optimal_k), random_state=0, n_init=10).fit(vectors_usuaris)
         return kmeans
     
     def similarity(self, user1, user2, metric):
@@ -76,15 +76,18 @@ class CBR:
         elif metric == "cosine":
             return cosine_similarity([user1.vector], [user2.vector])[0][0]
         
-    def retrieve(self, user, metric):
+    def retrieve(self, user,usuaris, clustering):
         """
         Return 5 most similar users
         """
-        similarities = []
+        cl = clustering.predict(user)[0]
+        etiquetes = clustering.labels_
+        usuaris_similars=usuaris[etiquetes==cl]
+        ''' similarities = []
         for u in self.users:
             similarities.append((u, self.similarity(user, u, metric)))
-        similarities.sort(key=lambda x: x[1], reverse=True)
-        return similarities[:2] #tupla de instancia d'usuari i similitud amb nou cas
+        similarities.sort(key=lambda x: x[1], reverse=True)'''
+        return usuaris_similars #tupla de instancia d'usuari i similitud amb nou cas
     
     def reuse(self, users):
         """
@@ -132,7 +135,8 @@ class CBR:
             self.users.append(user)
 
     def recomana(self, user):
-        users = self.retrieve(user, "cosine")
+        clustering = self.make_clustering()
+        users = self.retrieve(user, self.get_users,clustering)
         ll, punt = self.reuse(users)
         user = self.revise(user, ll, punt)
         user = self.review(user)
