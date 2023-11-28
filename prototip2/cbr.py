@@ -45,36 +45,41 @@ class CBR:
         return similarities[:5]
     
     def reuse(self, users):
+        # users és una llista de tuples (usuari, similitud)
         """
         Agafar tots els llibres dels 5 usuaris més similars
         """
         llibres_recom = []
         puntuacions = []
         for u, sim in users:
-            llibres_recom += u.llibres_recomanats #afegeix a la llista els llibres recomanats de l'usuari similar
-            puntuacions += u.puntuacio_llibres #afegeix a la llista les puntuacions dels llibres recomanats de l'usuari similar
+            llibres_recom += self.cases[u]['llibres_recomanats'] #afegeix a la llista els llibres recomanats de l'usuari similar
+            puntuacions += self.cases[u]['puntuacions'] #afegeix a la llista les puntuacions dels llibres recomanats de l'usuari similar
         return llibres_recom, puntuacions
     
     def revise(self, user, llibres_recom, puntuacions):
+        # user és un diccionari!!!
+        # llibres_recom és una llista de llibres
+        # puntuacions és una llista de puntuacions
         """
         Ens quedem amb els 3 llibres amb més puntuació i eliminem puntuacions        
         """
         llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:3]
-        user.llibres_recomanats += llibres
+        user[llibres_recomanats].append(llibres)
         return user
     
     def review(self, user):
+        # user és un diccionari!!!
         """
         L'usuari valora els tres llibres
         """
-        for llibre in user.llibres_recomanats:
+        for llibre in user[llibres_recomanats]:
             while True:
                 puntuacio = int(input(f"Quina puntuació li donaries a la recomanació del llibre {llibre}? (0-5) "))
                 if puntuacio >= 0 and puntuacio <= 5 and isinstance(puntuacio, int):
                     break
                 else:
                     print("La puntuació ha de ser un valor entre 0 i 5")
-            user.puntuacio_llibres.append(puntuacio)
+            user[puntuacions].append(puntuacio)
         return user
     
     def retain(self, user):
@@ -82,14 +87,15 @@ class CBR:
         Calculem la similitud de cosinus i, si es tracta d'un cas diferent, l'afegim a la bossa de casos
         """
         similarities = []
-        for u in self.users:
-            a = self.similarity(user, u, 'cosine')
+        for case in range(len(self.cases)):
+            a = self.similarity(user, case, 'cosine')
             similarities.append(a)
         print("Similitud mitjana entre l'usuari nou i els altres:", np.average(similarities))
         if np.average(similarities) <= 0.6:
-            self.users.append(user)
+            self.cases.aappend(user, ignore_index=True)
 
     def recomana(self, user):
+        # user es un diccionari!!!
         users = self.retrieve(user, "cosine")
         ll, punt = self.reuse(users)
         user = self.revise(user, ll, punt)
