@@ -35,7 +35,7 @@ class CBR:
         """
         Return 5 most similar users
         """
-        
+         
         similarities = []
         for u in self.users:
             similarities.append((u, self.similarity(user, u, metric)))
