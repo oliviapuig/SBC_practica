@@ -25,10 +25,6 @@ if response.status_code == 200:
         # Leer las primeras 500 filas del JSON
         primeras_500_filas = [json.loads(next(f)[:-1].decode('utf-8')) for _ in range(500000)]
 
-    # Guardar las primeras 500 filas en un nuevo archivo JSON
-    with open(json_name, 'w', encoding='utf-8') as file:
-        json.dump(primeras_500_filas, file, indent=2)
-
     print("JSON creat.")
 else:
     print(f"Error al descargar el archivo. Código de estado: {response.status_code}")
@@ -121,7 +117,7 @@ def scale(vector, min_ant = 0, max_ant = 5, min_nou = -1, max_nou = 1):
     escalador.fit([[min_ant], [max_ant]])
     return escalador.transform(vector.reshape(-1, 1)).flatten()
 
-llibres = pd.read_pickle("../data/books_clean.pkl")
+llibres = pd.read_pickle("data/books_clean.pkl")
 
 def get_attributes(llibres_usuari, val_llibres):
     """
@@ -131,7 +127,7 @@ def get_attributes(llibres_usuari, val_llibres):
     vector_usuari = np.zeros(len_vector)
     for ll, val in zip(llibres_usuari, val_llibres):
         vector_usuari += np.array(llibres[llibres["isbn13"] == ll]["vector"].iloc[0]) * scale(val)
-    #vector_usuari = self.scale(vector_usuari)
+    vector_usuari = scale(vector_usuari)
     #print("Vector usuari escalat: ", vector_usuari)
 
     # Si hay vectores con valores entre -0.01 y 0.01, los ponemos a 0
