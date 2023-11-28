@@ -80,7 +80,7 @@ class CBR:
         """
         Return 5 most similar users
         """
-        cl = clustering.predict(user)[0]
+        cl = clustering.predict(user.vector.reshape(1,-1))[0]
         etiquetes = clustering.labels_
         usuaris_similars=usuaris[etiquetes==cl]
         ''' similarities = []
@@ -135,7 +135,8 @@ class CBR:
             self.users.append(user)
 
     def recomana(self, user):
-        clustering = self.make_clustering()
+        vectors_usuaris= list(u.vector for u in self.users)
+        clustering = self.make_clustering(vectors_usuaris)
         users = self.retrieve(user, self.get_users,clustering)
         ll, punt = self.reuse(users)
         user = self.revise(user, ll, punt)
