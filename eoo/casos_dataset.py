@@ -104,6 +104,38 @@ print("Done creating new columns.")
 # Change "books" and "ratings" columns to "llibres_usuari" and "val_llibres"
 df_aux = df_aux.rename(columns={'books': 'llibres_usuari', 'ratings': 'val_llibres'})
 
+set_llibres = set()
+for llibres in df_aux['llibres_usuari']:
+    set_llibres.update(llibres)
+for llibres in df_aux['llibres_recomanats']:
+    set_llibres.update(llibres)
+
+# URL del archivo JSON comprimido
+url = 'https://datarepo.eng.ucsd.edu/mcauley_group/gdrive/goodreads/goodreads_books.json.gz'
+
+# Realizar la solicitud GET al servidor
+response = requests.get(url, stream=True)
+
+# Verificar si la solicitud fue exitosa (código de estado 200)
+if response.status_code == 200:
+    # Get the books that their book_id is in set_llibres
+    data = []
+    with gzip.GzipFile(fileobj=response.raw) as f:
+        for line in f:
+            line = json.loads(line)
+            if line['book_id'] in set_llibres:
+                data.append(line)
+
+    print("JSON creat.")
+else:
+    print(f"Error al descargar el archivo. Código de estado: {response.status_code}")
+
+llibres = pd.DataFrame(primeras_500_filas)
+
+
+# For each user and each book inside "llibres_usuari" and "llibres_recomanats" get the book_id and 
+
+
 def scale(vector, min_ant = 0, max_ant = 5, min_nou = -1, max_nou = 1):
     """
     Passar de una valoracio [0-5] a una puntuació [-1-1]
