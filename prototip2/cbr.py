@@ -7,19 +7,20 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 class CBR:
-    def __init__(self, users): # users és una llista amb tots els casos (bossa de casos)
-        #self.encoder = self.get_encoder()
-        #self.users = self.transform_user_to_numeric(self.encoder, users)
-        #preproces_books()
-        self.users = users
+    def __init__(self, cases): #cases és el nom del fitxer de casos
+        self.cases = cases
     
     def __str__(self):
-        for user in self.users:
-            print(user)
+        for case in self.cases:
+            print(cases[case])
         return ""
     
     def get_users(self):
-        return self.users
+        '''
+        Retorna una llista amb tots els usuaris
+        '''
+        users = cases["user_id"].unique()
+        return users
 
    
     def similarity(self, user1, user2, metric):
