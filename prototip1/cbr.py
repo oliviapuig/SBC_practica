@@ -21,53 +21,7 @@ class CBR:
     def get_users(self):
         return self.users
 
-    def __calculate_optimal_k(self, inertia, k_range):
-        """
-        Calcula el valor óptimo de K utilizando el método del codo automatizado.
-        :param inertia: Lista de valores de inercia para diferentes valores de K.
-        :param k_range: Rango de valores de K considerados.
-        :return: Valor óptimo de K.
-        """
-        # Coordenadas del primer y último punto
-        p1 = np.array([k_range[0], inertia[0]])
-        p2 = np.array([k_range[-1], inertia[-1]])
-
-        # Distancia de cada punto a la línea
-        distances = []
-        for k, iner in zip(k_range, inertia):
-            pk = np.array([k, iner])
-            line_vec = p2 - p1
-            point_vec = pk - p1
-            distance = np.abs(np.cross(line_vec, point_vec)) / np.linalg.norm(line_vec)
-            distances.append(distance)
-
-        # Encontrar el índice del valor máximo de la distancia
-        optimal_k_index = np.argmax(distances)
-        return k_range[optimal_k_index]
-    
-    def make_clustering(self,vectors_usuaris):
-        # Número de usuarios
-        num_usuarios = 100
-
-        # Cada usuario tiene un vector de 13 posiciones
-        # Generamos datos aleatorios para simular estos vectores
-        np.random.seed(0)
-        user_vectors = np.random.uniform(-1, 1, (num_usuarios, 13))
-
-        # Método del codo para determinar el número óptimo de clusters
-        inertia = []
-        k_range = range(1, 11)
-        for k in k_range:
-            kmeans = KMeans(n_clusters=k, random_state=0, n_init=10).fit(vectors_usuaris)
-            inertia.append(kmeans.inertia_)
-        
-        # Calcular el valor óptimo de K
-        optimal_k = self.__calculate_optimal_k(inertia, k_range)
-
-        # Realizar el clustering con el valor óptimo de K
-        kmeans = KMeans(n_clusters=int(optimal_k), random_state=0, n_init=10).fit(vectors_usuaris)
-        return kmeans
-    
+   
     def similarity(self, user1, user2, metric):
         if metric == "hamming":
             # Hamming distance
@@ -76,18 +30,15 @@ class CBR:
         elif metric == "cosine":
             return cosine_similarity([user1.vector], [user2.vector])[0][0]
         
-    def retrieve(self, user,usuaris, clustering):
+    def retrieve(self, user, metric):
         """
         Return 5 most similar users
         """
-        cl = clustering.predict(user.vector.reshape(1,-1))[0]
-        etiquetes = clustering.labels_
-        usuaris_similars=usuaris[etiquetes==cl]
-        ''' similarities = []
+        similarities = []
         for u in self.users:
             similarities.append((u, self.similarity(user, u, metric)))
-        similarities.sort(key=lambda x: x[1], reverse=True)'''
-        return usuaris_similars #tupla de instancia d'usuari i similitud amb nou cas
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        return similarities[:1]
     
     def reuse(self, users):
         """
@@ -135,9 +86,7 @@ class CBR:
             self.users.append(user)
 
     def recomana(self, user):
-        vectors_usuaris= list(u.vector for u in self.users)
-        clustering = self.make_clustering(vectors_usuaris)
-        users = self.retrieve(user, self.get_users,clustering)
+        users = self.retrieve(user, "cosine")
         ll, punt = self.reuse(users)
         user = self.revise(user, ll, punt)
         user = self.review(user)
