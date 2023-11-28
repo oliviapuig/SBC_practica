@@ -7,40 +7,42 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 class CBR:
-    def __init__(self, cases): #cases és el nom del fitxer de casos
+    def __init__(self, cases): #cases és el pandas dataframe de casos
         self.cases = cases
     
     def __str__(self):
         for case in self.cases:
-            print(cases[case])
+            print(self.cases[case])
         return ""
     
     def get_users(self):
         '''
         Retorna una llista amb tots els usuaris
         '''
-        users = cases["user_id"].unique()
+        users = self.cases["user_id"].unique()
         return users
 
-   
-    def similarity(self, user1, user2, metric):
+    def similarity(self, user, case, metric):
+        # case haurà de ser el num de cas dins dataframe
         if metric == "hamming":
             # Hamming distance
             dist = DistanceMetric.get_metric('hamming')
-            return dist.pairwise([user1.vector], [user2.vector])[0][0]
+            return dist.pairwise(user["vector"], self.cases[case]["vector"])[0][0]
         elif metric == "cosine":
-            return cosine_similarity([user1.vector], [user2.vector])[0][0]
+            return cosine_similarity(user["vector"], self.cases[case]["vector"])[0][0]
         
     def retrieve(self, user, metric):
         """
         Return 5 most similar users
         """
-        
         similarities = []
-        for u in self.users:
-            similarities.append((u, self.similarity(user, u, metric)))
+        for case in range(len(self.cases)):
+            similarities.append((self.cases[case], self.similarity(user, case, metric)))
+            # self.cases[case] perq volem posar el num de cas
+            # (user, case, metric) perq volem fer similarity entre l'usuari i el cas, 
+            # per tant necessitem el numero de cas per a la funcio similarity poder fer self.cases[case]
         similarities.sort(key=lambda x: x[1], reverse=True)
-        return similarities[:1]
+        return similarities[:5]
     
     def reuse(self, users):
         """
