@@ -196,7 +196,7 @@ if get:
                 book = pd.DataFrame([book], index=[0])
                 # Add the book to the DataFrame
                 df_genres = pd.concat([df_genres, pd.DataFrame(book, index=[0])])
-                df_genres.to_csv("genres.csv", index=False)
+                #df_genres.to_csv("genres.csv", index=False)
 
     # Merge df_llibres and df_genres on book_id
     df_llibres['book_id'] = df_llibres['book_id'].astype(int)
