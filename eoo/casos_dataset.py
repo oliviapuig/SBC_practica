@@ -149,7 +149,7 @@ def scale(vector, min_ant = 0, max_ant = 5, min_nou = -1, max_nou = 1):
     escalador.fit([[min_ant], [max_ant]])
     return escalador.transform(vector.reshape(-1, 1)).flatten()
 
-llibres = pd.read_pickle("data/books_clean.pkl")
+llibres = pd.read_pickle("llibres.pkl")
 
 def get_attributes(llibres_usuari, val_llibres):
     """
