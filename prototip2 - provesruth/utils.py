@@ -41,6 +41,7 @@ class Usuari:
         self.puntuacio_llibres = attributes["puntuacio_llibres"]
 
         self.vector = self.get_attributes()
+        self.cluster= None
 
     def __str__(self):
         print(f"User {self.get_id()}")
