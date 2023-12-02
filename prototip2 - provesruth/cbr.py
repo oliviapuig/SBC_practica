@@ -36,7 +36,7 @@ class CBR:
         """
         Return 5 most similar users
         """
-        cl=self.clustering.predict(user.vector)
+        cl=self.clustering.predict(user.vector.reshape(1,-1))[0]
         veins = self.cases[self.cases.cluster == cl]
         distancies = np.linalg.norm(user.vector - veins, axis=1)
 

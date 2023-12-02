@@ -69,7 +69,7 @@ class Usuari:
         """
         Aconseguir el vector d'atributs d'usuari a partir dels llibres que ha llegit
         """
-        llibres = pd.read_pickle("../data/books_clean.pkl")
+        llibres = pd.read_pickle("data/books_clean.pkl")
         len_vector = len(llibres["vector"].iloc[0])
         vector_usuari = np.zeros(len_vector)
         for ll, val in zip(self.llibres_usuari, self.val_llibres):
