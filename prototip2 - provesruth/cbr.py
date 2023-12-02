@@ -28,17 +28,17 @@ class CBR:
         if metric == "hamming":
             # Hamming distance
             dist = DistanceMetric.get_metric('hamming')
-            return dist.pairwise(user["vector"], self.cases[case]["vector"])[0][0]
+            return dist.pairwise(user.vector, self.cases[case].vector)[0][0]
         elif metric == "cosine":
-            return cosine_similarity(user["vector"], self.cases[case]["vector"])[0][0]
+            return cosine_similarity(user.vector, self.cases[case].vector)[0][0]
         
     def retrieve(self, user):
         """
         Return 5 most similar users
         """
-        cl=self.clustering.predict(user['vector'])
+        cl=self.clustering.predict(user.vector.reshape(-1,1))
         veins = self.cases[self.cases.cluster == cl]
-        distancies = np.linalg.norm(user['vector'] - veins, axis=1)
+        distancies = np.linalg.norm(user.vector - veins, axis=1)
 
         veins_ordenats = veins[np.argsort(distancies)[1:]]  # Excluye el propio punto
 
@@ -64,7 +64,7 @@ class CBR:
         Ens quedem amb els 3 llibres amb més puntuació i eliminem puntuacions        
         """
         llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:3]
-        user[llibres_recomanats].append(llibres)
+        user['llibres_recomanats'].append(llibres)
         return user
     
     def review(self, user):
@@ -92,7 +92,7 @@ class CBR:
             similarities.append(a)
         print("Similitud mitjana entre l'usuari nou i els altres:", np.average(similarities))
         if np.average(similarities) <= 0.6:
-            self.cases.aappend(user, ignore_index=True)
+            self.cases.append(user, ignore_index=True)
 
     def recomana(self, user):
         # user es un diccionari!!!
