@@ -84,4 +84,3 @@ class Usuari:
 
         return np.round(vector_usuari, 1)
     ### afegir ruth's metric
-    

@@ -5,7 +5,7 @@ from collections import Counter
 import pandas as pd
 from utils import Usuari
 
-llibres=pd.read_csv('../data/books_clean.csv')
+llibres=pd.read_csv('data/books_clean.csv')
 
 estils_literaris = ["Modernisme","Noucentisme","Surrealisme","Realisme","Romanticisme","Barroquisme","Simbolisme","Escola Mallorquina","Escola Valenciana","Escola Catalana"
 ]
