@@ -36,11 +36,16 @@ class CBR:
         """
         Return 5 most similar users
         """
-        cl=self.clustering.predict(user.vector.reshape(1,-1))[0]
+        vector = user.vector.reshape(1,-1)
+        cl=self.clustering.predict(vector)[0]
         veins = self.cases[self.cases.cluster == cl]
-        distancies = np.linalg.norm(user.vector - veins, axis=1)
+        #distancies = np.linalg.norm(user.vector - veins, axis=1)
 
-        veins_ordenats = veins[np.argsort(distancies)[1:]]  # Excluye el propio punto
+        #veins_ordenats = veins[np.argsort(distancies)[1:]]  # Excluye el propio punto
+        distancias = veins['vector'].apply(lambda x: np.linalg.norm(vector - np.array(list(x)), axis=1))
+
+        # Encuentra el conjunto más cercano
+        veins_ordenats = veins.iloc[np.argmin(distancias)]
 
         return veins_ordenats[:10] if len(veins_ordenats)>=10 else veins_ordenats
     
