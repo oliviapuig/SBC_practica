@@ -7,9 +7,10 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 class CBR:
-    def __init__(self, cases,clustering): #cases és el pandas dataframe de casos
+    def __init__(self, cases,clustering,books): #cases és el pandas dataframe de casos
         self.cases = cases
         self.clustering = clustering
+        self.books=books
     
     def __str__(self):
         for case in self.cases:
@@ -28,9 +29,9 @@ class CBR:
         if metric == "hamming":
             # Hamming distance
             dist = DistanceMetric.get_metric('hamming')
-            return dist.pairwise(user.vector, self.cases[case].vector)[0][0]
+            return dist.pairwise(user.vector.reshape(1,-1), self.cases.iloc[case].vector.reshape(1,-1))[0][0]
         elif metric == "cosine":
-            return cosine_similarity(user.vector, self.cases[case].vector)[0][0]
+            return cosine_similarity(user.vector.reshape(1,-1), self.cases.iloc[case].vector.reshape(1,-1))[0][0]
         
     def retrieve(self, user):
         """
@@ -42,14 +43,16 @@ class CBR:
         #distancies = np.linalg.norm(user.vector - veins, axis=1)
 
         #veins_ordenats = veins[np.argsort(distancies)[1:]]  # Excluye el propio punto
-        distancias = veins['vector'].apply(lambda x: np.linalg.norm(vector - np.array(list(x)), axis=1))
-
+        distancies = veins['vector'].apply(lambda x: np.linalg.norm(vector - np.array(list(x)), axis=1)) #distancia euclidea 
         # Encuentra el conjunto más cercano
-        veins_ordenats = veins.iloc[np.argmin(distancias)]
+        #veins_ordenats = veins.iloc[np.argmin(distancias)]
+        # Suponiendo que distancias es una Serie de pandas
+        veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
         return veins_ordenats[:10] if len(veins_ordenats)>=10 else veins_ordenats
     
     def reuse(self, users):
+  
         # users és una llista de tuples (usuari, similitud)
         """
         Agafar tots els llibres dels 5 usuaris més similars
@@ -57,11 +60,12 @@ class CBR:
         llibres_recom = []
         puntuacions = []
         for u, sim in users:
-            llibres_recom += self.cases[u]['llibres_recomanats'] #afegeix a la llista els llibres recomanats de l'usuari similar
-            puntuacions += self.cases[u]['puntuacions'] #afegeix a la llista les puntuacions dels llibres recomanats de l'usuari similar
+            llibres_recom += self.cases.iloc[u]['llibres_recomanats'] #afegeix a la llista els llibres recomanats de l'usuari similar
+            puntuacions += self.cases.iloc[u]['puntuacions_llibres'] #afegeix a la llista les puntuacions dels llibres recomanats de l'usuari similar
         return llibres_recom, puntuacions
     
     def revise(self, user, llibres_recom, puntuacions):
+
         # user és un diccionari!!!
         # llibres_recom és una llista de llibres
         # puntuacions és una llista de puntuacions
@@ -69,22 +73,23 @@ class CBR:
         Ens quedem amb els 3 llibres amb més puntuació i eliminem puntuacions        
         """
         llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:3]
-        user['llibres_recomanats'].append(llibres)
+        user['llibres_recomanats']+=llibres
         return user
     
     def review(self, user):
+
         # user és un diccionari!!!
         """
         L'usuari valora els tres llibres
         """
         for llibre in user['llibres_recomanats']:
             while True:
-                puntuacio = int(input(f"Quina puntuació li donaries a la recomanació del llibre {llibre}? (0-5) "))
+                puntuacio = int(input(f"Quina puntuació li donaries a la recomanació del llibre {self.books.loc[self.books[self.books['book_id'] == int(llibre)].index[0],'title']}? (0-5) ")) #agafo titol del llibre
                 if puntuacio >= 0 and puntuacio <= 5 and isinstance(puntuacio, int):
                     break
                 else:
                     print("La puntuació ha de ser un valor entre 0 i 5")
-            user['puntuacions'].append(puntuacio)
+            user['puntuacions_llibres'].append(puntuacio)
         return user
     
     def retain(self, user):
