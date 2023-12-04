@@ -22,5 +22,5 @@ print("Original Graph")
 print("Nodes:", len(G.nodes()))
 print("Edges:", len(G.edges()))
 
-#nx.draw(G, with_labels=False)
-#plt.show()
+nx.draw(G, with_labels=False)
+plt.show()

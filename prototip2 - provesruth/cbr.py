@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 class CBR:
-    def __init__(self, cases,clustering,books): #cases és el pandas dataframe de casos
+    def __init__(self, cases, clustering, books): #cases és el pandas dataframe de casos
         self.cases = cases
         self.clustering = clustering
         self.books=books
@@ -35,7 +35,7 @@ class CBR:
         
     def retrieve(self, user):
         """
-        Return 5 most similar users
+        Return 10 most similar users
         """
         vector = user.vector.reshape(1,-1)
         cl=self.clustering.predict(vector)[0]
@@ -52,10 +52,10 @@ class CBR:
         return veins_ordenats[:10] if len(veins_ordenats)>=10 else veins_ordenats
     
     def reuse(self, users):
-  
+        
         # users és una llista de tuples (usuari, similitud)
         """
-        Agafar tots els llibres dels 5 usuaris més similars
+        Retorna els 3 llibres que més haurien d'agradar a l'usuari
         """
         llibres_recom = []
         puntuacions = []
@@ -70,7 +70,7 @@ class CBR:
         # llibres_recom és una llista de llibres
         # puntuacions és una llista de puntuacions
         """
-        Ens quedem amb els 3 llibres amb més puntuació i eliminem puntuacions        
+        Revisem la solució i mirem si pot haver algún llibre que li pot agradar més
         """
         llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:3]
         user['llibres_recomanats']+=llibres
