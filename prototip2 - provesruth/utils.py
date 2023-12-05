@@ -41,6 +41,7 @@ class Usuari:
         self.puntuacio_llibres = attributes["puntuacio_llibres"]
 
         self.vector = self.get_attributes()
+        self.cluster= None
 
     def __str__(self):
         print(f"User {self.get_id()}")
@@ -68,7 +69,7 @@ class Usuari:
         """
         Aconseguir el vector d'atributs d'usuari a partir dels llibres que ha llegit
         """
-        llibres = pd.read_pickle("../data/books_clean.pkl")
+        llibres = pd.read_pickle("data/books_clean.pkl")
         len_vector = len(llibres["vector"].iloc[0])
         vector_usuari = np.zeros(len_vector)
         for ll, val in zip(self.llibres_usuari, self.val_llibres):
@@ -83,4 +84,3 @@ class Usuari:
 
         return np.round(vector_usuari, 1)
     ### afegir ruth's metric
-    
