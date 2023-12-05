@@ -65,16 +65,22 @@ class CBR:
         return llibres_recom, puntuacions
     
     def revise(self, user, llibres_recom, puntuacions):
-
-        # user és un diccionari!!!
-        # llibres_recom és una llista de llibres
-        # puntuacions és una llista de puntuacions
         """
-        Revisem la solució i mirem si pot haver algún llibre que li pot agradar més
+        Ens quedem amb els 3 llibres amb més puntuació i eliminem puntuacions        
+        Mirem la columna de clustering dels 3 llibres recomanats i calculem la similitud de l'usuari amb els llibres del cluster
+        Si la similitud entre l'usuari i un llibre és superior a la de l'usuari i un dels llibres recomanats, intercanviem els llibres
         """
         llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:3]
-        user['llibres_recomanats']+=llibres
-        return user
+        user["llibres_recomanats"].append(llibres)
+        for llibre in llibres:
+            cluster = self.books[self.books.book_id==int(llibre)]["cluster"]
+            # Coger todos los libros que coincidan con el cluster del libro recomendado
+            llibres_del_cluster = self.books[self.books['cluster'] == cluster]
+            for ll in llibres_del_cluster:
+                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre, "cosine"):
+                    llibres[llibres.index(llibre)] = ll
+                    break
+        user["llibres_recomanats"] = llibres
     
     def review(self, user):
 
