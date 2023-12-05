@@ -2,7 +2,7 @@ import pandas as pd
 import networkx as nx
 import json
 
-data = pd.read_pickle('eoo/llibres.pkl')
+data = pd.read_pickle('data/llibres.pkl')
 
 llibres = []
 for i in range(len(data)):
