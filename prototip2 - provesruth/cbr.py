@@ -40,13 +40,9 @@ class CBR:
         vector = user.vector.reshape(1,-1)
         cl=self.clustering.predict(vector)[0]
         veins = self.cases[self.cases.cluster == cl]
-        #distancies = np.linalg.norm(user.vector - veins, axis=1)
-
-        #veins_ordenats = veins[np.argsort(distancies)[1:]]  # Excluye el propio punto
+        
         distancies = veins['vector'].apply(lambda x: np.linalg.norm(vector - np.array(list(x)), axis=1)) #distancia euclidea 
-        # Encuentra el conjunto más cercano
-        #veins_ordenats = veins.iloc[np.argmin(distancias)]
-        # Suponiendo que distancias es una Serie de pandas
+      
         veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
         return veins_ordenats[:10] if len(veins_ordenats)>=10 else veins_ordenats
