@@ -1,10 +1,8 @@
-#from typing import Any
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import DistanceMetric
 import numpy as np
-#from sklearn.preprocessing import OneHotEncoder
-#from utils import Usuari
 from sklearn.cluster import KMeans
+from sklearn.neighbors import NearestNeighbors
 
 class CBR:
     def __init__(self, cases, clustering, books): #cases és el pandas dataframe de casos
@@ -47,26 +45,44 @@ class CBR:
 
         return veins_ordenats[:10] if len(veins_ordenats)>=10 else veins_ordenats
     
-    def reuse(self, users):
+    def reuse(self, user, users):
         
         # users és una llista de tuples (usuari, similitud)
+        print(users)
         """
-        Retorna els 3 llibres que més haurien d'agradar a l'usuari
+        Retorna els 3 llibres que més haurien d'agradar a l'usuari segons un KNN dels usuaris
         """
+        # Cogemos los vectores de los libros recomendados por los usuarios similares
+        vector_llibres_recom = []
+        book_ids = []
+        for u, _ in users:
+            for llibre in self.cases.iloc[u]['llibres_recomanats']:
+                v_llibre = list(self.books[self.books.book_id == int(llibre)]['vector'])[0]
+                b_id = int(self.books[self.books.book_id == int(llibre)]['book_id'].iloc[0])
+                vector_llibres_recom.append(v_llibre)
+                book_ids.append(b_id)
+        # El resultado deberian ser 15 vectores de 85 elementos
+        vector_user = user.vector.reshape(1,-1)
+        vector_llibres_recom = np.array(vector_llibres_recom)
+
+        # Hacemos un KNN con los vectores de los libros recomendados
+        knn = NearestNeighbors(n_neighbors=3)
+        knn.fit(vector_llibres_recom)
+        distancias, indices = knn.kneighbors(vector_user)
+
+        # Guardamos los book_ids de los libros más cercanos
         llibres_recom = []
-        puntuacions = []
-        for u, sim in users:
-            llibres_recom += self.cases.iloc[u]['llibres_recomanats'] #afegeix a la llista els llibres recomanats de l'usuari similar
-            puntuacions += self.cases.iloc[u]['puntuacions_llibres'] #afegeix a la llista les puntuacions dels llibres recomanats de l'usuari similar
-        return llibres_recom, puntuacions
+        for i in indices[0]:
+            llibres_recom.append(book_ids[i])
+
+        return llibres_recom
     
-    def revise(self, user, llibres_recom, puntuacions):
+    def revise(self, user, llibres):
         """
         Ens quedem amb els 3 llibres amb més puntuació i eliminem puntuacions        
         Mirem la columna de clustering dels 3 llibres recomanats i calculem la similitud de l'usuari amb els llibres del cluster
         Si la similitud entre l'usuari i un llibre és superior a la de l'usuari i un dels llibres recomanats, intercanviem els llibres
         """
-        llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:3]
         user["llibres_recomanats"].append(llibres)
         for llibre in llibres:
             cluster = self.books[self.books.book_id==int(llibre)]["cluster"]
@@ -96,21 +112,59 @@ class CBR:
     
     def retain(self, user):
         """
-        Calculem la similitud de cosinus i, si es tracta d'un cas diferent, l'afegim a la bossa de casos
+        calculem similitud entre casos SENSE TENIR EN COMPTE RECOMANACIONS
+        - si cas molt diferent → ens el quedem
+        - si el cas molt similar → mirem recomanacions
+            - si les valoracions que ha posat a les recomanacions son totes 4<x<5 o 1<x<2 ens ho quedem perq casos extrems
+            - si no, no ens el quedem perq cas similar
+        - calcular utilitat
         """
+        vector = user.vector.reshape(1,-1)
+        cl=self.clustering.predict(vector)[0]
+        veins = self.cases[self.cases.cluster == cl]
+
         similarities = []
-        for case in range(len(self.cases)):
+
+        for case in range(len(veins)):
             a = self.similarity(user, case, 'cosine')
             similarities.append(a)
-        print("Similitud mitjana entre l'usuari nou i els altres:", np.average(similarities))
+
         if np.average(similarities) <= 0.6:
             self.cases.append(user, ignore_index=True)
+        else:
+            for i in range(len(user['puntuacions_llibres'])):
+                if user['puntuacions_llibres'][i] > 2 or user['puntuacions_llibres'][i] < 4:
+                    break
+                elif i == len(user['puntuacions_llibres'])-1:
+                    self.cases.append(user, ignore_index=True)
+        
+        self.utilitat(user) # actualitzem utilitat
+
+    def utilitat(self, user):
+        """
+        Calcula la utilitat de l'usuari
+        com calcular utilitat:
+            - calculem utilitat al retain
+            - cas utilitzat → llibre del cas és recomanat → llibre recomanat bona valoració → ENTENEM QUE EL CAS ÉS ÚTIL
+            - un cas pot ser uttil de manera negativa
+                - si el seu llibre es recomanat i rep una valoracio negativa
+            - si un lllibre dle cas ha estat recomant → +0.5
+                - si aquest llibre ha estat valorat (1 o 5) → +0.5
+        """
+        users = self.retrieve(user) #casos que hem utilitzart per fer la recomanacio --> llisat de tuples (index, similitud)
+
+        for i in range(len(user['llibres_recomanats'])): #per cada llibre recomanat
+            for k in range(len(users)): #per cada cas similar utilitzat
+                if user['llibres_recomanats'][i] in self.cases.iloc[k]['llibres_recomanats']: #si el llibre recomanat es troba a la llista de llibres recomanats del cas similar
+                    self.cases.iloc[k]['utilitat'] += 0.5
+                    if user['puntuacions_llibres'][i] == 1 or user['puntuacions_llibres'][i] == 5: #si el llibre recomanat ha rebut una valoracio de 1<x<2 o 4<x<5
+                        self.cases.iloc[k]['utilitat'] += 0.5
 
     def recomana(self, user):
         # user es un diccionari!!!
         users = self.retrieve(user)
-        ll, punt = self.reuse(users)
-        user = self.revise(user, ll, punt)
+        ll = self.reuse(users)
+        user = self.revise(user, ll)
         user = self.review(user)
         self.retain(user)
         return user
