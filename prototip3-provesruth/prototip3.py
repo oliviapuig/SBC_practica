@@ -6,16 +6,15 @@
 # - Marc Ucelayeta
 
 from cbr import CBR
-from utils import Usuari
 import pickle
 import pandas as pd
 import random
 import numpy as np
 
-cases =pd.read_pickle('../data/casos.pkl')
-books = pd.read_pickle('../data/llibres.pkl')
+cases =pd.read_pickle('./data/casos.pkl')
+books = pd.read_pickle('./data/llibres.pkl')
 
-with open('../data/clustering/model_clustering_kmeans.pkl', 'rb') as arxiu:
+with open('./data/clustering/model_clustering_casos.pkl', 'rb') as arxiu:
     clustering = pickle.load(arxiu)
 
 #estableixo nou cas com el primer borrant els seus llibres recomanats (temporal)
