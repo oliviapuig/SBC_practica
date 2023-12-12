@@ -527,11 +527,12 @@ if get:
     vectors = [np.array(vector) for vector in vectors]
     # Add vectors to dataframe
     df['vector'] = vectors
+    llibres = df
 
+    llibres.to_pickle(carpeta+pkl_name_ll)
+    llibres.to_csv(carpeta+csv_name_ll, index=False)
+    
     print("Done creating llibres.pkl vector")
-
-    df.to_csv(carpeta+csv_name_ll, index=False)
-    df.to_pickle(carpeta+pkl_name_ll)
 
 try:
     casos = pd.read_pickle(carpeta+pkl_name)
