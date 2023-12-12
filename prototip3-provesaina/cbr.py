@@ -169,7 +169,7 @@ class CBR:
     def recomana(self, user):
         # user es un diccionari!!!
         users = self.retrieve(user)
-        ll = self.reuse(users)
+        ll = self.reuse(user,users)
         user = self.revise(user, ll)
         user = self.review(user)
         self.retain(user)
