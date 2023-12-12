@@ -77,6 +77,10 @@ class CBR:
         for i in indices[0]:
             llibres_recom.append(book_ids[i])
 
+
+        # FALTA MIRAR Q LLIBRES SIGUIN DIFERENTS
+
+
         return llibres_recom
     
     def revise(self, user, llibres):

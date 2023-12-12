@@ -490,15 +490,7 @@ except:
     get = True
     df = pd.read_pickle(carpeta+pkl_name_ll)
 
-if get:
-    # Make dummies for categorical variables and drop the original columns
-    llibres_dummies = pd.get_dummies(df, columns=['language_code', 'format', 'series', 'estil_literari', 'complexitat', 'caracteristiques', 'desenvolupament_del_personatge', 'accio_o_reflexio', 'epoca', 'detall_cientific'])
-    # Eliminar totes les columnes que no siguin booleanes
-    for column in llibres_dummies.columns:
-        if llibres_dummies[column].dtype != bool:
-            llibres_dummies = llibres_dummies.drop(column, axis=1)
-
-    def scale(vector, min_ant = 0, max_ant = 5, min_nou = 0, max_nou = 1):
+def scale(vector, min_ant = 0, max_ant = 5, min_nou = 0, max_nou = 1):
         """
         Passar de una valoracio [0-5] a una puntuació [-1-1]
         """
@@ -510,6 +502,14 @@ if get:
         escalador = MinMaxScaler(feature_range=(min_nou, max_nou))
         escalador.fit([[min_ant], [max_ant]])
         return escalador.transform(vector.reshape(-1, 1)).flatten()
+
+if get:
+    # Make dummies for categorical variables and drop the original columns
+    llibres_dummies = pd.get_dummies(df, columns=['language_code', 'format', 'series', 'estil_literari', 'complexitat', 'caracteristiques', 'desenvolupament_del_personatge', 'accio_o_reflexio', 'epoca', 'detall_cientific'])
+    # Eliminar totes les columnes que no siguin booleanes
+    for column in llibres_dummies.columns:
+        if llibres_dummies[column].dtype != bool:
+            llibres_dummies = llibres_dummies.drop(column, axis=1)
     
     scaled_av_rating = scale(df['average_rating'].to_numpy())
     scaled_num_pages = scale(df['num_pages'].to_numpy(), min_ant=0, max_ant=900)
@@ -558,7 +558,7 @@ if get:
             vector_usuari += np.array(llibres[llibres["book_id"] == int(ll)]["vector"].iloc[0]) * scale(val)
         np.round(vector_usuari, 1)
 
-        vector_usuari = scale(vector_usuari, min(vector_usuari), max(vector_usuari), -1, 1)
+        vector_usuari = scale(vector_usuari, min(vector_usuari), max(vector_usuari), 0, 1)
 
         # Si hay vectores con valores entre -0.01 y 0.01, los ponemos a 0
         for i in range(len(vector_usuari)):
@@ -572,6 +572,9 @@ if get:
         vector_usuari = get_attributes(row['llibres_usuari'], row['val_llibres'])
         vectors.append(vector_usuari)
     casos["vector"] = vectors
+
+    casos.to_pickle(carpeta+pkl_name)
+
     print("Done creating casos.pkl vector")
 
 try:
