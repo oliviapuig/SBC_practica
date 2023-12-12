@@ -574,6 +574,21 @@ if get:
     casos["vector"] = vectors
     print("Done creating casos.pkl vector")
 
+try:
+    # Check if column "utilitat" exists in casos.pkl
+    casos = pd.read_pickle(carpeta+pkl_name)
+    casos["utilitat"]
+    get = False
+    print("casos.pkl utilitat already created. Loading...")
+except:
+    print("Starting to create casos.pkl utilitat")
+    get = True
+
+if get:
+    # Crear un vector de 0 con longitud igual al numero de casos
+    zeros = [0 for _ in range(len(casos))]
+    casos['utilitat'] = zeros
+
 casos.to_csv(carpeta+csv_name, index=False)
 casos.to_pickle(carpeta+pkl_name)
 llibres.to_csv(carpeta+csv_name_ll, index=False)
