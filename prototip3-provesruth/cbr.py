@@ -29,9 +29,10 @@ class CBR:
         if metric == "hamming":
             # Hamming distance
             dist = DistanceMetric.get_metric('hamming')
-            return dist.pairwise(user.vector.reshape(1,-1), self.cases.iloc[case].vector.reshape(1,-1))[0][0]
+            return dist.pairwise(user.vector.reshape(1,-1), np.array(case.vector).reshape(1,-1))[0][0]
         elif metric == "cosine":
-            return cosine_similarity(user.vector.reshape(1,-1), self.cases.iloc[case].vector.reshape(1,-1))[0][0]
+            
+            return cosine_similarity(user.vector.reshape(1,-1), [np.array(case.vector)])[0][0]
         
     def retrieve(self, user):
         """
@@ -45,7 +46,7 @@ class CBR:
       
         veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
-        return veins_ordenats[:10] if len(veins_ordenats)>=10 else veins_ordenats
+        return veins_ordenats[:5] if len(veins_ordenats)>=10 else veins_ordenats
     
     def reuse(self, users):
         
@@ -67,13 +68,17 @@ class CBR:
         Si la similitud entre l'usuari i un llibre és superior a la de l'usuari i un dels llibres recomanats, intercanviem els llibres
         """
         llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:3]
+     
         user["llibres_recomanats"].append(llibres)
         for llibre in llibres:
             cluster = self.books[self.books.book_id==int(llibre)]["cluster"]
+            llibre_complet = self.books[self.books.book_id==int(llibre)]
             # Coger todos los libros que coincidan con el cluster del libro recomendado
-            llibres_del_cluster = self.books[self.books['cluster'] == cluster]
-            for ll in llibres_del_cluster:
-                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre, "cosine"):
+            llibres_del_cluster = self.books[self.books['cluster'] == int(cluster)]
+            for i,ll in llibres_del_cluster.iterrows():
+                print('ei',ll)
+                #print('hola',llibre_complet)
+                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_complet, "cosine"):
                     llibres[llibres.index(llibre)] = ll
                     break
         user["llibres_recomanats"] = llibres

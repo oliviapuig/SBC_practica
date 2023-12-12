@@ -18,8 +18,8 @@ with open('./data/clustering/model_clustering_casos.pkl', 'rb') as arxiu:
     clustering = pickle.load(arxiu)
 
 #estableixo nou cas com el primer borrant els seus llibres recomanats (temporal)
-cases.llibres_recomanats[0] = []
-cases.puntuacions_llibres[0] = []
+cases.at[0, 'llibres_recomanats'] = []
+cases.at[0, 'puntuacions_llibres'] = []
 nou_cas = cases.iloc[0]
 cases=cases.iloc[1:]
 
