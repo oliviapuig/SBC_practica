@@ -1,9 +1,6 @@
-#from typing import Any
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import DistanceMetric
 import numpy as np
-#from sklearn.preprocessing import OneHotEncoder
-#from utils import Usuari
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 
@@ -34,12 +31,9 @@ class CBR:
             return dist.pairwise(user.vector.reshape(1,-1), np.array(case.vector).reshape(1,-1))[0][0]
         elif metric == "cosine":
             user_vector_np = np.array(user.vector).reshape(1, -1)
-            case_vector_np = np.array([case.vector]).reshape(1, -1)
-            print('soc vector user', user_vector_np)
-            print('soc vector cas',case_vector_np)
+            case_vector_np = np.array(case.vector).reshape(1,-1)
             return cosine_similarity(user_vector_np, case_vector_np)[0][0]
-            #return cosine_similarity(user.vector.reshape(1,-1), [np.array(case.vector)])[0][0]
-        
+          
     def retrieve(self, user):
         """
         Return 10 most similar users
@@ -78,14 +72,15 @@ class CBR:
         user["llibres_recomanats"].append(llibres)
         for llibre in llibres:
             cluster = self.books[self.books.book_id==int(llibre)]["cluster"]
-            llibre_complet = self.books[self.books.book_id==int(llibre)]
+            llibre_recomanat = self.books[self.books.book_id==int(llibre)].iloc[0]
             # Coger todos los libros que coincidan con el cluster del libro recomendado
             llibres_del_cluster = self.books[self.books['cluster'] == int(cluster)]
             for i,ll in llibres_del_cluster.iterrows():
-                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_complet, "cosine"):
-                    llibres[llibres.index(llibre)] = ll
+                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_recomanat, "cosine"):
+                    llibres[llibres.index(llibre)] = ll['book_id']
                     break
         user["llibres_recomanats"] = llibres
+        return user
     
     def review(self, user):
 
@@ -93,6 +88,7 @@ class CBR:
         """
         L'usuari valora els tres llibres
         """
+        print('holaaa',user['llibres_recomanats'])
         for llibre in user['llibres_recomanats']:
             while True:
                 puntuacio = int(input(f"Quina puntuació li donaries a la recomanació del llibre {self.books.loc[self.books[self.books['book_id'] == int(llibre)].index[0],'title']}? (0-5) ")) #agafo titol del llibre
@@ -109,7 +105,7 @@ class CBR:
         """
         similarities = []
         for case in range(len(self.cases)):
-            a = self.similarity(user, case, 'cosine')
+            a = self.similarity(user, self.cases.iloc[case], 'cosine')
             similarities.append(a)
         print("Similitud mitjana entre l'usuari nou i els altres:", np.average(similarities))
         if np.average(similarities) <= 0.6:
@@ -141,6 +137,6 @@ class CBR:
             veins_no_utils = self.cases[self.cases.iloc[indexs.flatten()]['utilitat']==0].index
             base_actualitzada = self.cases.drop(veins_no_utils)
         
-        
+
 
             
