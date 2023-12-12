@@ -9,6 +9,7 @@ class CBR:
         self.cases = cases
         self.clustering = clustering
         self.books=books
+        self.iteracions = 0
     
     def __str__(self):
         for case in self.cases:
@@ -27,10 +28,12 @@ class CBR:
         if metric == "hamming":
             # Hamming distance
             dist = DistanceMetric.get_metric('hamming')
-            return dist.pairwise(user.vector.reshape(1,-1), self.cases.iloc[case].vector.reshape(1,-1))[0][0]
+            return dist.pairwise(user.vector.reshape(1,-1), np.array(case.vector).reshape(1,-1))[0][0]
         elif metric == "cosine":
-            return cosine_similarity(user.vector.reshape(1,-1), self.cases.iloc[case].vector.reshape(1,-1))[0][0]
-        
+            user_vector_np = np.array(user.vector).reshape(1, -1)
+            case_vector_np = np.array(case.vector).reshape(1,-1)
+            return cosine_similarity(user_vector_np, case_vector_np)[0][0]
+          
     def retrieve(self, user):
         """
         Return 10 most similar users
@@ -43,12 +46,11 @@ class CBR:
       
         veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
-        return veins_ordenats[:10] if len(veins_ordenats)>=10 else veins_ordenats
+        return veins_ordenats[:5] if len(veins_ordenats)>=10 else veins_ordenats
     
-    def reuse(self, user, users):
+    def reuse(self, user,users):
         
         # users és una llista de tuples (usuari, similitud)
-        print(users)
         """
         Retorna els 3 llibres que més haurien d'agradar a l'usuari segons un KNN dels usuaris
         """
@@ -68,7 +70,7 @@ class CBR:
         # Hacemos un KNN con los vectores de los libros recomendados
         knn = NearestNeighbors(n_neighbors=3)
         knn.fit(vector_llibres_recom)
-        distancias, indices = knn.kneighbors(vector_user)
+        _, indices = knn.kneighbors(vector_user)
 
         # Guardamos los book_ids de los libros más cercanos
         llibres_recom = []
@@ -83,16 +85,19 @@ class CBR:
         Mirem la columna de clustering dels 3 llibres recomanats i calculem la similitud de l'usuari amb els llibres del cluster
         Si la similitud entre l'usuari i un llibre és superior a la de l'usuari i un dels llibres recomanats, intercanviem els llibres
         """
+     
         user["llibres_recomanats"].append(llibres)
         for llibre in llibres:
             cluster = self.books[self.books.book_id==int(llibre)]["cluster"]
+            llibre_recomanat = self.books[self.books.book_id==int(llibre)].iloc[0]
             # Coger todos los libros que coincidan con el cluster del libro recomendado
-            llibres_del_cluster = self.books[self.books['cluster'] == cluster]
-            for ll in llibres_del_cluster:
-                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre, "cosine"):
-                    llibres[llibres.index(llibre)] = ll
+            llibres_del_cluster = self.books[self.books['cluster'] == int(cluster)]
+            for i,ll in llibres_del_cluster.iterrows():
+                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_recomanat, "cosine"):
+                    llibres[llibres.index(llibre)] = ll['book_id']
                     break
         user["llibres_recomanats"] = llibres
+        return user
     
     def review(self, user):
 
@@ -100,6 +105,7 @@ class CBR:
         """
         L'usuari valora els tres llibres
         """
+        print('holaaa',user['llibres_recomanats'])
         for llibre in user['llibres_recomanats']:
             while True:
                 puntuacio = int(input(f"Quina puntuació li donaries a la recomanació del llibre {self.books.loc[self.books[self.books['book_id'] == int(llibre)].index[0],'title']}? (0-5) ")) #agafo titol del llibre
