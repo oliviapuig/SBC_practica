@@ -132,8 +132,15 @@ class CBR:
         vectors = np.array(self.cases['vector'].tolist())
         for i, row in casos_utils.iterrows():
             vector = row.vector.reshape(1, -1)
+
+            #predim els 3 veins més propers
             nbrs = NearestNeighbors(n_neighbors=3, metric='cosine').fit(vectors)
             _, indexs = nbrs.kneighbors(vector)
-            self.cases.iloc[indexs.flatten()]['utilitat']
+
+            #eliminem els veins que tinguin utilitat 0
+            veins_no_utils = self.cases[self.cases.iloc[indexs.flatten()]['utilitat']==0].index
+            base_actualitzada = self.cases.drop(veins_no_utils)
+        
+        
 
             
