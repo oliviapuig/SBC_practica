@@ -5,12 +5,14 @@ import numpy as np
 #from sklearn.preprocessing import OneHotEncoder
 #from utils import Usuari
 from sklearn.cluster import KMeans
+from sklearn.neighbors import NearestNeighbors
 
 class CBR:
     def __init__(self, cases, clustering, books): #cases és el pandas dataframe de casos
         self.cases = cases
         self.clustering = clustering
         self.books=books
+        self.iteracions = 0
     
     def __str__(self):
         for case in self.cases:
@@ -31,8 +33,12 @@ class CBR:
             dist = DistanceMetric.get_metric('hamming')
             return dist.pairwise(user.vector.reshape(1,-1), np.array(case.vector).reshape(1,-1))[0][0]
         elif metric == "cosine":
-            
-            return cosine_similarity(user.vector.reshape(1,-1), [np.array(case.vector)])[0][0]
+            user_vector_np = np.array(user.vector).reshape(1, -1)
+            case_vector_np = np.array([case.vector]).reshape(1, -1)
+            print('soc vector user', user_vector_np)
+            print('soc vector cas',case_vector_np)
+            return cosine_similarity(user_vector_np, case_vector_np)[0][0]
+            #return cosine_similarity(user.vector.reshape(1,-1), [np.array(case.vector)])[0][0]
         
     def retrieve(self, user):
         """
@@ -76,8 +82,6 @@ class CBR:
             # Coger todos los libros que coincidan con el cluster del libro recomendado
             llibres_del_cluster = self.books[self.books['cluster'] == int(cluster)]
             for i,ll in llibres_del_cluster.iterrows():
-                print('ei',ll)
-                #print('hola',llibre_complet)
                 if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_complet, "cosine"):
                     llibres[llibres.index(llibre)] = ll
                     break
@@ -118,4 +122,18 @@ class CBR:
         user = self.revise(user, ll, punt)
         user = self.review(user)
         self.retain(user)
+        self.iteracions+=1
+        if self.iteracions%100==0:
+            self.actualitza_base()
         return user
+    
+    def actualitza_base(self):
+        casos_utils = self.cases[self.cases.utilitat >0]
+        vectors = np.array(self.cases['vector'].tolist())
+        for i, row in casos_utils.iterrows():
+            vector = row.vector.reshape(1, -1)
+            nbrs = NearestNeighbors(n_neighbors=3, metric='cosine').fit(vectors)
+            _, indexs = nbrs.kneighbors(vector)
+            self.cases.iloc[indexs.flatten()]['utilitat']
+
+            
