@@ -48,26 +48,44 @@ class CBR:
 
         return veins_ordenats[:5] if len(veins_ordenats)>=10 else veins_ordenats
     
-    def reuse(self, users):
+    def reuse(self, user,users):
         
         # users és una llista de tuples (usuari, similitud)
         """
-        Retorna els 3 llibres que més haurien d'agradar a l'usuari
+        Retorna els 3 llibres que més haurien d'agradar a l'usuari segons un KNN dels usuaris
         """
+        # Cogemos los vectores de los libros recomendados por los usuarios similares
+        vector_llibres_recom = []
+        book_ids = []
+        for u, _ in users:
+            for llibre in self.cases.iloc[u]['llibres_recomanats']:
+                v_llibre = list(self.books[self.books.book_id == int(llibre)]['vector'])[0]
+                b_id = int(self.books[self.books.book_id == int(llibre)]['book_id'].iloc[0])
+                vector_llibres_recom.append(v_llibre)
+                book_ids.append(b_id)
+        # El resultado deberian ser 15 vectores de 85 elementos
+        vector_user = user.vector.reshape(1,-1)
+        vector_llibres_recom = np.array(vector_llibres_recom)
+
+        # Hacemos un KNN con los vectores de los libros recomendados
+        knn = NearestNeighbors(n_neighbors=3)
+        knn.fit(vector_llibres_recom)
+        _, indices = knn.kneighbors(vector_user)
+
+        # Guardamos los book_ids de los libros más cercanos
         llibres_recom = []
-        puntuacions = []
-        for u, sim in users:
-            llibres_recom += self.cases.iloc[u]['llibres_recomanats'] #afegeix a la llista els llibres recomanats de l'usuari similar
-            puntuacions += self.cases.iloc[u]['puntuacions_llibres'] #afegeix a la llista les puntuacions dels llibres recomanats de l'usuari similar
-        return llibres_recom, puntuacions
+        for i in indices[0]:
+            llibres_recom.append(book_ids[i])
+
+        return llibres_recom
     
-    def revise(self, user, llibres_recom, puntuacions):
+
+    def revise(self, user, llibres):
         """
         Ens quedem amb els 3 llibres amb més puntuació i eliminem puntuacions        
         Mirem la columna de clustering dels 3 llibres recomanats i calculem la similitud de l'usuari amb els llibres del cluster
         Si la similitud entre l'usuari i un llibre és superior a la de l'usuari i un dels llibres recomanats, intercanviem els llibres
         """
-        llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:3]
      
         user["llibres_recomanats"].append(llibres)
         for llibre in llibres:
@@ -114,8 +132,8 @@ class CBR:
     def recomana(self, user):
         # user es un diccionari!!!
         users = self.retrieve(user)
-        ll, punt = self.reuse(users)
-        user = self.revise(user, ll, punt)
+        ll = self.reuse(user,users)
+        user = self.revise(user, ll)
         user = self.review(user)
         self.retain(user)
         self.iteracions+=1
