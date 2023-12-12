@@ -66,39 +66,21 @@ class CBR:
         Mirem la columna de clustering dels 3 llibres recomanats i calculem la similitud de l'usuari amb els llibres del cluster
         Si la similitud entre l'usuari i un llibre és superior a la de l'usuari i un dels llibres recomanats, intercanviem els llibres
         """
-        llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:2]
+        llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:3]
+     
         user["llibres_recomanats"].append(llibres)
         for llibre in llibres:
             cluster = self.books[self.books.book_id==int(llibre)]["cluster"]
+            llibre_complet = self.books[self.books.book_id==int(llibre)]
             # Coger todos los libros que coincidan con el cluster del libro recomendado
-            llibres_del_cluster = self.books[self.books['cluster' == cluster]
-            for ll in llibres_del_cluster:
-                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre, "cosine"):
+            llibres_del_cluster = self.books[self.books['cluster'] == int(cluster)]
+            for i,ll in llibres_del_cluster.iterrows():
+                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_complet, "cosine"):
                     llibres[llibres.index(llibre)] = ll
                     break
         user["llibres_recomanats"] = llibres
-        return user
-        
-    import numpy as np
-
-def revise(self, user, llibres_recom, puntuacions):
-    """
-    Ens quedem amb els 3 llibres amb més puntuació i eliminem puntuacions        
-    Mirem la columna de clustering dels 2 llibres recomanats i calculem la similitud de l'usuari amb els llibres del cluster
-    Si la similitud entre l'usuari i un llibre és superior a la de l'usuari i un dels llibres recomanats, intercanviem els llibres
-    """
-    llibres = [x for _,x in sorted(zip(puntuacions, llibres_recom), reverse=True)][:2]
-    #funció que obté el cluster de l'usuari
-    cluster = self.clustering.predict(user.vector.reshape(1,-1))[0]
-    #funció que obté els centroides dels clusters
-    centroides = self.clustering.cluster_centers_
     
-    
-
-
-# Utilitza aquestes funcions al teu codi segons les teves necessitats.
-
-
+ 
     def review(self, user):
 
         # user és un diccionari!!!
@@ -114,7 +96,7 @@ def revise(self, user, llibres_recom, puntuacions):
                     print("La puntuació ha de ser un valor entre 0 i 5")
             user['puntuacions_llibres'].append(puntuacio)
         return user
-    
+
     def retain(self, user):
         """
         Calculem la similitud de cosinus i, si es tracta d'un cas diferent, l'afegim a la bossa de casos
