@@ -1,7 +1,7 @@
 json_name = 'data.json'
 pkl_name = 'casos.pkl'
 csv_name = 'casos.csv'
-carpeta = 'eoo/'
+carpeta = 'data/'
 pkl_name_ll = 'llibres.pkl'
 csv_name_ll = 'llibres.csv'
 path_reviews_dataset = 'https://datarepo.eng.ucsd.edu/mcauley_group/gdrive/goodreads/goodreads_reviews_dedup.json.gz'
@@ -20,9 +20,9 @@ np.random.seed(0)
 
 # if casos.pkl exists, load it
 try:
-    print("casos.pkl exists. Loading...")
     casos = pd.read_pickle(carpeta+pkl_name)
     get = False
+    print("casos.pkl exists. Loading...")
 except:
     print("Starting to create casos.pkl")
     get = True
@@ -488,6 +488,7 @@ try:
 except:
     print("Starting to create llibres.pkl vector")
     get = True
+    df = pd.read_pickle(carpeta+pkl_name_ll)
 
 if get:
     # Make dummies for categorical variables and drop the original columns
@@ -522,11 +523,16 @@ if get:
 
     # Make vector of each book and add it to the dataframe
     vectors = np.array(llibres_dummies).astype(float)
-    df["vector"] = vectors.tolist()
-    print("Done creating llibres.pkl vector")
+    # Make vectors a list of arrays
+    vectors = [np.array(vector) for vector in vectors]
+    # Add vectors to dataframe
+    df['vector'] = vectors
+    llibres = df
 
-    df.to_csv(carpeta+csv_name_ll, index=False)
-    df.to_pickle(carpeta+pkl_name_ll)
+    llibres.to_pickle(carpeta+pkl_name_ll)
+    llibres.to_csv(carpeta+csv_name_ll, index=False)
+    
+    print("Done creating llibres.pkl vector")
 
 try:
     casos = pd.read_pickle(carpeta+pkl_name)
