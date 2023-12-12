@@ -5,6 +5,7 @@ import numpy as np
 #from sklearn.preprocessing import OneHotEncoder
 #from utils import Usuari
 from sklearn.cluster import KMeans
+from sklearn.neighbors import NearestNeighbors
 
 class CBR:
     def __init__(self, cases, clustering, books): #cases és el pandas dataframe de casos
@@ -38,21 +39,55 @@ class CBR:
         Return 10 most similar users
         """
         vector = user.vector.reshape(1,-1)
-        cl=self.clustering.predict(vector)[0]
+        cl = self.clustering.predict(vector)[0]
         veins = self.cases[self.cases.cluster == cl]
         
-        distancies = veins['vector'].apply(lambda x: np.linalg.norm(vector - np.array(list(x)), axis=1)) #distancia euclidea 
+        distancies = veins['vector'].apply(lambda x: np.linalg.norm(vector - np.array(list(x)), axis=1)) # distancia euclidea 
         veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
         return veins_ordenats[:5] if len(veins_ordenats) >= 5 else veins_ordenats
     
-    def reuse(self, users):
+    def reuse(self, user, users):
         
         # users és una llista de tuples (usuari, similitud)
         print(users)
         """
-        Retorna els 3 llibres que més haurien d'agradar a l'usuari
+        Retorna els 3 llibres que més haurien d'agradar a l'usuari segons un KNN dels usuaris
         """
+        # Cogemos los vectores de los libros recomendados por los usuarios similares
+        vector_llibres_recom = []
+        book_ids = []
+        for u, _ in users:
+            for llibre in self.cases.iloc[u]['llibres_recomanats']:
+                v_llibre = list(self.books[self.books.book_id == int(llibre)]['vector'])[0]
+                b_id = int(self.books[self.books.book_id == int(llibre)]['book_id'])
+                vector_llibres_recom.append(v_llibre)
+                book_ids.append(b_id)
+        # El resultado deberian ser 15 vectores de 85 elementos
+        vector_user = user.vector.reshape(1,-1)
+        vector_llibres_recom = np.array(vector_llibres_recom)
+
+        # Hacemos un KNN con los vectores de los libros recomendados
+        knn = NearestNeighbors(n_neighbors=3)
+        knn.fit(vector_llibres_recom)
+        distancias, indices = knn.kneighbors(vector_user)
+        print("Índices de los libros más cercanos:", indices)
+        print("Distancias de los libros más cercanos:", distancias)
+        # Print titulos de los libros más cercanos
+        print("Llibres més propers:")
+        for i in indices[0]:
+            print(self.books[self.books.book_id == book_ids[i]]['title'])
+
+        # Guardamos los book_ids de los libros más cercanos
+        llibres_recom = []
+        for i in indices[0]:
+            llibres_recom.append(book_ids[i])
+        print("Llibres recomanats:", llibres_recom)
+
+
+        # Buscamos 
+
+
         llibres_recom = []
         puntuacions = []
         for u, sim in users:
@@ -109,7 +144,7 @@ class CBR:
     def recomana(self, user):
         # user es un diccionari!!!
         users = self.retrieve(user)
-        ll, punt = self.reuse(users)
+        ll, punt = self.reuse(user, users)
         user = self.revise(user, ll, punt)
         user = self.review(user)
         self.retain(user)
