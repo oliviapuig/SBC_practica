@@ -23,6 +23,7 @@ cases.at[0, 'puntuacions_llibres'] = []
 nou_cas = cases.iloc[0]
 cases=cases.iloc[1:]
 
+
 cbr = CBR(cases,clustering,books)
 recomanacio = cbr.recomana(nou_cas)
 print("Usuari final:")

@@ -141,6 +141,31 @@ class CBR:
             self.actualitza_base()
         return user
     
+    def __calculate_optimal_k(self,inertia,k_range):
+        
+        """
+        Calcula el valor óptimo de K utilizando el método del codo automatizado.
+        :param inertia: Lista de valores de inercia para diferentes valores de K.
+        :param k_range: Rango de valores de K considerados.
+        :return: Valor óptimo de K.
+        """
+        # Coordenadas del primer y último punto
+        p1 = np.array([k_range[0], inertia[0]])
+        p2 = np.array([k_range[-1], inertia[-1]])
+
+        # Distancia de cada punto a la línea
+        distances = []
+        for k, iner in zip(k_range, inertia):
+            pk = np.array([k, iner])
+            line_vec = p2 - p1
+            point_vec = pk - p1
+            distance = np.abs(np.cross(line_vec, point_vec)) / np.linalg.norm(line_vec)
+            distances.append(distance)
+
+        # Encontrar el índice del valor máximo de la distancia
+        optimal_k_index = np.argmax(distances)
+        return k_range[optimal_k_index]
+    
     def actualitza_base(self):
         casos_utils = self.cases[self.cases.utilitat >0]
         vectors = np.array(self.cases['vector'].tolist())
@@ -154,6 +179,18 @@ class CBR:
             #eliminem els veins que tinguin utilitat 0
             veins_no_utils = self.cases[self.cases.iloc[indexs.flatten()]['utilitat']==0].index
             base_actualitzada = self.cases.drop(veins_no_utils)
+
+        vectors_actualitzats=list(base_actualitzada.vector)
+        wcss = []
+        k_range = range(1,11)
+        for i in k_range:
+            kmeans = KMeans(n_clusters=i, init='k-means++', random_state=42, n_init=10)
+            kmeans.fit(vectors_actualitzats)
+            wcss.append(kmeans.inertia_)
+
+        kmeans = KMeans(n_clusters=self.__calculate_optimal_k(wcss, k_range))
+        base_actualitzada.cluster = kmeans.fit_predict(vectors_actualitzats)
+        self.cases = base_actualitzada 
         
 
 
