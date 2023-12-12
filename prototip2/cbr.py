@@ -10,7 +10,7 @@ class CBR:
     def __init__(self, cases, clustering, books): #cases és el pandas dataframe de casos
         self.cases = cases
         self.clustering = clustering
-        self.books=books
+        self.books = books
     
     def __str__(self):
         for case in self.cases:
@@ -42,14 +42,14 @@ class CBR:
         veins = self.cases[self.cases.cluster == cl]
         
         distancies = veins['vector'].apply(lambda x: np.linalg.norm(vector - np.array(list(x)), axis=1)) #distancia euclidea 
-      
         veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
-        return veins_ordenats[:10] if len(veins_ordenats)>=10 else veins_ordenats
+        return veins_ordenats[:5] if len(veins_ordenats) >= 5 else veins_ordenats
     
     def reuse(self, users):
         
         # users és una llista de tuples (usuari, similitud)
+        print(users)
         """
         Retorna els 3 llibres que més haurien d'agradar a l'usuari
         """
