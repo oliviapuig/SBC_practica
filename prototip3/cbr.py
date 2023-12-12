@@ -119,16 +119,54 @@ class CBR:
     
     def retain(self, user):
         """
-        Calculem la similitud de cosinus i, si es tracta d'un cas diferent, l'afegim a la bossa de casos
+        calculem similitud entre casos SENSE TENIR EN COMPTE RECOMANACIONS
+        - si cas molt diferent → ens el quedem
+        - si el cas molt similar → mirem recomanacions
+            - si les valoracions que ha posat a les recomanacions son totes 4<x<5 o 1<x<2 ens ho quedem perq casos extrems
+            - si no, no ens el quedem perq cas similar
+        - calcular utilitat
         """
+        vector = user.vector.reshape(1,-1)
+        cl=self.clustering.predict(vector)[0]
+        veins = self.cases[self.cases.cluster == cl]
+
         similarities = []
-        for case in range(len(self.cases)):
+
+        for case in range(len(veins)):
             a = self.similarity(user, self.cases.iloc[case], 'cosine')
             similarities.append(a)
-        print("Similitud mitjana entre l'usuari nou i els altres:", np.average(similarities))
+
         if np.average(similarities) <= 0.6:
             self.cases.append(user, ignore_index=True)
+        else:
+            for i in range(len(user['puntuacions_llibres'])):
+                if user['puntuacions_llibres'][i] > 2 or user['puntuacions_llibres'][i] < 4:
+                    break
+                elif i == len(user['puntuacions_llibres'])-1:
+                    self.cases.append(user, ignore_index=True)
+        
+        self.utilitat(user) # actualitzem utilitat
 
+    def utilitat(self, user):
+        """
+        Calcula la utilitat de l'usuari
+        com calcular utilitat:
+            - calculem utilitat al retain
+            - cas utilitzat → llibre del cas és recomanat → llibre recomanat bona valoració → ENTENEM QUE EL CAS ÉS ÚTIL
+            - un cas pot ser uttil de manera negativa
+                - si el seu llibre es recomanat i rep una valoracio negativa
+            - si un lllibre dle cas ha estat recomant → +0.5
+                - si aquest llibre ha estat valorat (1 o 5) → +0.5
+        """
+        users = self.retrieve(user) #casos que hem utilitzart per fer la recomanacio --> llisat de tuples (index, similitud)
+
+        for i in range(len(user['llibres_recomanats'])): #per cada llibre recomanat
+            for k in range(len(users)): #per cada cas similar utilitzat
+                if user['llibres_recomanats'][i] in self.cases.iloc[k]['llibres_recomanats']: #si el llibre recomanat es troba a la llista de llibres recomanats del cas similar
+                    self.cases.iloc[k]['utilitat'] += 0.5
+                    if user['puntuacions_llibres'][i] == 1 or user['puntuacions_llibres'][i] == 5: #si el llibre recomanat ha rebut una valoracio de 1<x<2 o 4<x<5
+                        self.cases.iloc[k]['utilitat'] += 0.5
+                        
     def recomana(self, user):
         # user es un diccionari!!!
         users = self.retrieve(user)
