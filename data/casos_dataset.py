@@ -144,7 +144,7 @@ if get:
 
     fitxer = path_fitxer_llibres
     # Crear un DataFrame vacío para almacenar los libros que coincidan
-    df_llibres = pd.DataFrame(columns=['isbn', 'book_id', 'similar_books', 'average_rating', 'description', 'authors', 'isbn13', 'num_pages', 'publication_year', 'title', 'language_code', 'format', 'series'])
+    llibres = pd.DataFrame(columns=['isbn', 'book_id', 'similar_books', 'average_rating', 'ratings_count', 'description', 'authors', 'isbn13', 'num_pages', 'publication_year', 'title', 'language_code', 'format', 'series'])
 
     # Leer el archivo línea por línea
     i = 1
@@ -153,7 +153,7 @@ if get:
             book = json.loads(line)
             if book['book_id'] in set_llibres:
                 # Only keep the columns "isbn", "book_id", "similar_books", "average_rating", "similar_books", "description", "authors", "isbn13", "num_pages", "publication_year", "title" and "language_code"
-                book = {k: book[k] for k in ['isbn', 'book_id', 'similar_books', 'average_rating', 'similar_books', 'description', 'authors', 'isbn13', 'num_pages', 'publication_year', 'title', 'language_code', 'format', 'series']}
+                book = {k: book[k] for k in ['isbn', 'book_id', 'similar_books', 'average_rating', 'ratings_count', 'similar_books', 'description', 'authors', 'isbn13', 'num_pages', 'publication_year', 'title', 'language_code', 'format', 'series']}
                 aut = []
                 for author in book['authors']:
                     aut.append(author['author_id'])
@@ -161,11 +161,13 @@ if get:
                 # Convert the dictionary to a DataFrame
                 book = pd.DataFrame([book], index=[0])
                 # Add the book to the DataFrame
-                df_llibres = pd.concat([df_llibres, pd.DataFrame(book, index=[0])])
+                llibres = pd.concat([llibres, pd.DataFrame(book, index=[0])])
                 i += 1
+            if i % 500 == 0:
+                print(f"{i} books added")
     print("Done creating llibres.pkl")
-    df_llibres.to_csv(carpeta+csv_name_ll, index=False)
-    df_llibres.to_pickle(carpeta+pkl_name_ll)
+    llibres.to_csv(carpeta+csv_name_ll, index=False)
+    llibres.to_pickle(carpeta+pkl_name_ll)
 
 # If column "genres" exists in llibres.pkl then get = False
 try:
@@ -176,7 +178,7 @@ try:
 except:
     print("Starting to create column 'genres' in llibres.pkl")
     get = True
-    df_llibres = pd.read_csv(carpeta+csv_name_ll)
+    llibres = pd.read_csv(carpeta+csv_name_ll)
 
 if get:
     fitxer = path_genres_dataset
@@ -198,32 +200,32 @@ if get:
                 df_genres = pd.concat([df_genres, pd.DataFrame(book, index=[0])])
                 #df_genres.to_csv("genres.csv", index=False)
 
-    # Merge df_llibres and df_genres on book_id
-    df_llibres['book_id'] = df_llibres['book_id'].astype(int)
+    # Merge llibres and df_genres on book_id
+    llibres['book_id'] = llibres['book_id'].astype(int)
     df_genres['book_id'] = df_genres['book_id'].astype(int)
-    df_llibres= pd.merge(df_llibres, df_genres, on='book_id', how='inner')
-    df_llibres.to_csv("llibres.csv", index=False)
+    llibres= pd.merge(llibres, df_genres, on='book_id', how='inner')
+    llibres.to_csv("llibres.csv", index=False)
 
     # Check how many unique genres there are
     unique_genres = set()
-    for index, row in df_llibres.iterrows():
+    for index, row in llibres.iterrows():
         for genre in row['genres']:
             unique_genres.add(genre)
 
     # Replace 'history, historical fiction, biography' to 'history'
-    df_llibres['genres'] = df_llibres['genres'].apply(lambda x: ['history' if i == 'history, historical fiction, biography' else i for i in x])
+    llibres['genres'] = llibres['genres'].apply(lambda x: ['history' if i == 'history, historical fiction, biography' else i for i in x])
     # Replace 'fantasy, paranormal' to 'fantasy'
-    df_llibres['genres'] = df_llibres['genres'].apply(lambda x: ['fantasy' if i == 'fantasy, paranormal' else i for i in x])
+    llibres['genres'] = llibres['genres'].apply(lambda x: ['fantasy' if i == 'fantasy, paranormal' else i for i in x])
     # Replace 'mystery, thriller, crime' to 'mystery'
-    df_llibres['genres'] = df_llibres['genres'].apply(lambda x: ['mystery' if i == 'mystery, thriller, crime' else i for i in x])
+    llibres['genres'] = llibres['genres'].apply(lambda x: ['mystery' if i == 'mystery, thriller, crime' else i for i in x])
     # Replace 'comics, graphic' to 'comics'
-    df_llibres['genres'] = df_llibres['genres'].apply(lambda x: ['comics' if i == 'comics, graphic' else i for i in x])
-    df_llibres.to_csv(carpeta+csv_name_ll, index=False)
-    df_llibres.to_pickle(carpeta+pkl_name_ll)
+    llibres['genres'] = llibres['genres'].apply(lambda x: ['comics' if i == 'comics, graphic' else i for i in x])
+    llibres.to_csv(carpeta+csv_name_ll, index=False)
+    llibres.to_pickle(carpeta+pkl_name_ll)
 
     # Check how many unique genres there are
     unique_genres = set()
-    for index, row in df_llibres.iterrows():
+    for index, row in llibres.iterrows():
         for genre in row['genres']:
             unique_genres.add(genre)
     print("Done creating column 'genres' in llibres.pkl")
@@ -350,7 +352,7 @@ if get:
         return [id for id in similars_list if id in ids_valids]
 
     # Obtenir els book_id com a conjunt per a una cerca més ràpida
-    ids_valids = set(df['book_id'].astype(str))
+    ids_valids = set(llibres['book_id'].astype(str))
     llibres['similar_books'] = llibres['similar_books'].apply(lambda x: neteja_similars(x, ids_valids))
     print("Removing similar books that are not in the database")
 
@@ -366,7 +368,7 @@ if get:
     llibres['isbn13'] = llibres['isbn13'].apply(assigna_noisbn)
     print("Done preprocessing isbn and isbn13")
 
-    df = pd.read_pickle(carpeta+pkl_name)
+    df = pd.read_pickle(carpeta+pkl_name_ll)
     # Unificar les diferents categories de audio
     df['format'] = df['format'].apply(lambda x: 'audio' if x in ['Audible Audio', 'Audio CD', 'Audio Cassette', 'Audio', 'Audiobook', 'audio cd', 'MP3 CD'] else x)
     # Unificar les diferents categories de ebook
@@ -479,6 +481,9 @@ if get:
     df['series'] = df['series'].apply(lambda x: np.nan if dic_series[x] <= 4 else x)
     print("Done preprocessing series")
 
+    llibres = df
+    llibres.to_pickle(carpeta+pkl_name_ll)
+
 # Create vector for each book
 try:
     llibres = pd.read_pickle(carpeta+pkl_name_ll)
@@ -505,7 +510,7 @@ def scale(vector, min_ant = 0, max_ant = 5, min_nou = 0, max_nou = 1):
 
 if get:
     # Make dummies for categorical variables and drop the original columns
-    llibres_dummies = pd.get_dummies(df, columns=['language_code', 'format', 'series', 'estil_literari', 'complexitat', 'caracteristiques', 'desenvolupament_del_personatge', 'accio_o_reflexio', 'epoca', 'detall_cientific'])
+    llibres_dummies = pd.get_dummies(df, columns=['language_code', 'format', 'series', 'estil_literari', 'complexitat', 'caracteristiques', 'desenvolupament_del_personatge', 'accio_o_reflexio', 'epoca', 'detall_cientific'], dtype=bool)
     # Eliminar totes les columnes que no siguin booleanes
     for column in llibres_dummies.columns:
         if llibres_dummies[column].dtype != bool:
