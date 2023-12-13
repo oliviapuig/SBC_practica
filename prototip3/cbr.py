@@ -177,6 +177,7 @@ class CBR:
         self.iteracions+=1
         if self.iteracions%100==0:
             self.actualitza_base()
+        print(self.cases[self.cases.utilitat >0])
         return user
     
     def __calculate_optimal_k(self,inertia,k_range):
