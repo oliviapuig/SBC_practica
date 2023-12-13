@@ -5,11 +5,9 @@
 # - Olivia Puig
 # - Marc Ucelayeta
 
-from cbr import CBR
+from cbr_automatic import CBR
 import pickle
 import pandas as pd
-import random
-import numpy as np
 
 cases =pd.read_pickle('./data/casos.pkl')
 books = pd.read_pickle('./data/llibres.pkl')
@@ -32,9 +30,13 @@ for i,_ in casos_nous.iterrows():
 cbr = CBR(cases,clustering,books)
 
 for i,cas in casos_nous.iterrows():
-    print('Nou cas')
+    print('Nou cas',i)
     recomanacio = cbr.recomana(cas)
-    print("Usuari final:")
-    print(recomanacio,'\n')
+    print('Recomanació final:')
+    for llibre in recomanacio.llibres_recomanats:
+        print(books[books.book_id==int(llibre)]['title'].iloc[0])
+    print('\n')
+    #print("Usuari final:")
+    #print(recomanacio,'\n')
 
 
