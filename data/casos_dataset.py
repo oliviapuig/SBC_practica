@@ -596,6 +596,26 @@ if get:
     # Crear un vector de 0 con longitud igual al numero de casos
     zeros = [0 for _ in range(len(casos))]
     casos['utilitat'] = zeros
+    casos.to_csv(carpeta+csv_name, index=False)
+    casos.to_pickle(carpeta+pkl_name)
+    llibres.to_csv(carpeta+csv_name_ll, index=False)
+    llibres.to_pickle(carpeta+pkl_name_ll)
+
+try:
+    # Check if bestsellers column exists in llibres.pkl
+    llibres = pd.read_pickle(carpeta+pkl_name_ll)
+    llibres["bestsellers"]
+    get = False
+    print("llibres.pkl bestsellers already created. Loading...")
+except:
+    print("Starting to create llibres.pkl bestsellers")
+    get = True
+
+if get:
+    # Get the 75% quantile of ratings_count
+    q75 = llibres['ratings_count'].quantile(0.75)
+    # If ratings_count > q75 and average_rating > 4 then bestseller = True
+    llibres['bestseller'] = llibres.apply(lambda x: True if x['ratings_count'] > q75 and x['average_rating'] > 4 else False, axis=1)
 
 casos.to_csv(carpeta+csv_name, index=False)
 casos.to_pickle(carpeta+pkl_name)
