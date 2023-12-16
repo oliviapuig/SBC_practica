@@ -5,7 +5,7 @@
 # - Olivia Puig
 # - Marc Ucelayeta
 
-from cbr_automatic import CBR
+from cbr import CBR
 import pickle
 import pandas as pd
 
@@ -16,11 +16,6 @@ with open('./data/clustering/model_clustering_casos.pkl', 'rb') as arxiu:
     clustering = pickle.load(arxiu)
 
 #estableixo nou cas com el primer borrant els seus llibres recomanats (temporal)
-'''cases.at[0, 'llibres_recomanats'] = []
-cases.at[0, 'puntuacions_llibres'] = []
-nou_cas = cases.iloc[0]
-cases=cases.iloc[1:]'''
-
 casos_nous = cases.iloc[:102]
 cases = cases.iloc[102:]
 for i,_ in casos_nous.iterrows():
@@ -35,8 +30,8 @@ for i,cas in casos_nous.iterrows():
     print('Recomanació final:')
     for llibre in recomanacio.llibres_recomanats:
         print(books[books.book_id==int(llibre)]['title'].iloc[0])
+        #cbr.justificacio(cas)
     print('\n')
-    #print("Usuari final:")
-    #print(recomanacio,'\n')
+   
 
 
