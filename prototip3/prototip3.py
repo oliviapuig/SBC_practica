@@ -8,8 +8,7 @@
 from cbr import CBR
 import pickle
 import pandas as pd
-import random
-import numpy as np
+
 
 cases =pd.read_pickle('./data/casos.pkl')
 books = pd.read_pickle('./data/llibres.pkl')
