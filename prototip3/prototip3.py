@@ -30,6 +30,3 @@ print("Usuari final:")
 print('Recomanació final:')
 for llibre in recomanacio.llibres_recomanats:
     print(books[books.book_id==int(llibre)]['title'].iloc[0])
-
-def hola():
-    pass
