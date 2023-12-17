@@ -79,7 +79,6 @@ class CBR:
             llibres_recom.append(book_ids[i])
 
         return llibres_recom
-    
 
     def revise(self, user, llibres):
         """
