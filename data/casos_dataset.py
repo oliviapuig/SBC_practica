@@ -228,6 +228,19 @@ if get:
     for index, row in llibres.iterrows():
         for genre in row['genres']:
             unique_genres.add(genre)
+
+    # Por cada libro, si su unico genero es 'fiction' o 'non-fiction' lo cambiamos por otro random
+    ll = ['mystery', 'non-fiction', 'fantasy', 'comics', 'children', 'young-adult', 'history', 'romance', 'poetry', 'fiction']
+    # Por cada libro
+    for i in range(llibres.shape[0]):
+        # Si el genero es 'fiction' o 'non-fiction' lo cambiamos por otro random
+        if len(llibres['genres'][i]) == 1 and (llibres['genres'][i][0] == 'fiction' or llibres['genres'][i][0] == 'non-fiction'):
+            llibres.at[i, 'genre'] = np.random.choice(ll)
+        if 'fiction' in llibres['genres'][i]:
+            llibres.at[i, 'genres'].remove('fiction')
+        if 'non-fiction' in llibres['genres'][i]:
+            llibres.at[i, 'genres'].remove('non-fiction')
+
     print("Done creating column 'genres' in llibres.pkl")
 
 llibres = pd.read_pickle(carpeta+pkl_name_ll)
@@ -246,9 +259,7 @@ if get:
     categories = {
     "estil_literari": ["realisme", "romanticisme", "naturalisme", "simbolisme", "modernisme", "realisme magico", "postmodernisme"],
     "complexitat": ["baixa", "mitjana", "alta"],
-    "caracteristiques": ["simples", "complexes"],
     "desenvolupament_del_personatge": ["baix", "mitja", "alt"],
-    "accio_o_reflexio": ["accio", "reflexio"],
     "epoca": ["actual", "passada", "futura"],
     "detall_cientific": ["baix", "mitja", "alta"]
     }
@@ -275,9 +286,7 @@ if get:
     # Inicialització de diccionaris per a cada atribut
     estil_literari = [{} for _ in range(len(llibres))]
     complexitat = [{} for _ in range(len(llibres))]
-    caracteristiques = [{} for _ in range(len(llibres))]
     desenvolupament_del_personatge = [{} for _ in range(len(llibres))]
-    accio_o_reflexio = [{} for _ in range(len(llibres))]
     epoca = [{} for _ in range(len(llibres))]
     detall_cientific = [{} for _ in range(len(llibres))]
 
@@ -286,9 +295,7 @@ if get:
         len_llibres_recomanats = len(row['llibres_recomanats'])
         estil_literari1, estil_literari2 = make_vector(len_llibres_usuari, len_llibres_recomanats, 2, 4, "estil_literari")
         complexitat1, complexitat2 = make_vector(len_llibres_usuari, len_llibres_recomanats, 1, 3, "complexitat")
-        caracteristiques1, caracteristiques2 = make_vector(len_llibres_usuari, len_llibres_recomanats, 1, 3, "caracteristiques")
         desenvolupament_del_personatge1, desenvolupament_del_personatge2 = make_vector(len_llibres_usuari, len_llibres_recomanats, 1, 3, "desenvolupament_del_personatge")
-        accio_o_reflexio1, accio_o_reflexio2 = make_vector(len_llibres_usuari, len_llibres_recomanats, 1, 2, "accio_o_reflexio")
         epoca1, epoca2 = make_vector(len_llibres_usuari, len_llibres_recomanats, 1, 3, "epoca")
         detall_cientific1, detall_cientific2 = make_vector(len_llibres_usuari, len_llibres_recomanats, 1, 3, "detall_cientific")
 
@@ -296,9 +303,7 @@ if get:
             llibre_id_usuari = llibres[llibres["book_id"] == int(row['llibres_usuari'][i])].index[0]
             actualitzar_diccionaris(llibre_id_usuari, estil_literari1[i], estil_literari)
             actualitzar_diccionaris(llibre_id_usuari, complexitat1[i], complexitat)
-            actualitzar_diccionaris(llibre_id_usuari, caracteristiques1[i], caracteristiques)
             actualitzar_diccionaris(llibre_id_usuari, desenvolupament_del_personatge1[i], desenvolupament_del_personatge)
-            actualitzar_diccionaris(llibre_id_usuari, accio_o_reflexio1[i], accio_o_reflexio)
             actualitzar_diccionaris(llibre_id_usuari, epoca1[i], epoca)
             actualitzar_diccionaris(llibre_id_usuari, detall_cientific1[i], detall_cientific)
 
@@ -306,9 +311,7 @@ if get:
             llibre_id_recomanat = llibres[llibres["book_id"] == int(row['llibres_recomanats'][i])].index[0]
             actualitzar_diccionaris(llibre_id_recomanat, estil_literari2[i], estil_literari)
             actualitzar_diccionaris(llibre_id_recomanat, complexitat2[i], complexitat)
-            actualitzar_diccionaris(llibre_id_recomanat, caracteristiques2[i], caracteristiques)
             actualitzar_diccionaris(llibre_id_recomanat, desenvolupament_del_personatge2[i], desenvolupament_del_personatge)
-            actualitzar_diccionaris(llibre_id_recomanat, accio_o_reflexio2[i], accio_o_reflexio)
             actualitzar_diccionaris(llibre_id_recomanat, epoca2[i], epoca)
             actualitzar_diccionaris(llibre_id_recomanat, detall_cientific2[i], detall_cientific)
     
@@ -318,12 +321,8 @@ if get:
             estil_literari[i] = max(estil_literari[i], key=estil_literari[i].get)
         if len(complexitat[i]) > 0:
             complexitat[i] = max(complexitat[i], key=complexitat[i].get)
-        if len(caracteristiques[i]) > 0:
-            caracteristiques[i] = max(caracteristiques[i], key=caracteristiques[i].get)
         if len(desenvolupament_del_personatge[i]) > 0:
             desenvolupament_del_personatge[i] = max(desenvolupament_del_personatge[i], key=desenvolupament_del_personatge[i].get)
-        if len(accio_o_reflexio[i]) > 0:
-            accio_o_reflexio[i] = max(accio_o_reflexio[i], key=accio_o_reflexio[i].get)
         if len(epoca[i]) > 0:
             epoca[i] = max(epoca[i], key=epoca[i].get)
         if len(detall_cientific[i]) > 0:
@@ -332,9 +331,7 @@ if get:
     # Afegir les noves columnes al DataFrame
     llibres["estil_literari"] = estil_literari
     llibres["complexitat"] = complexitat
-    llibres["caracteristiques"] = caracteristiques
     llibres["desenvolupament_del_personatge"] = desenvolupament_del_personatge
-    llibres["accio_o_reflexio"] = accio_o_reflexio
     llibres["epoca"] = epoca
     llibres["detall_cientific"] = detall_cientific
 
@@ -458,6 +455,7 @@ if get:
 
     # Aplicar la funció a les columnes isbn i isbn13
     df['language_code'] = df['language_code'].apply(assigna_noidentificat)
+
     print("Done preprocessing language_code")
 
     # SERIES
@@ -483,6 +481,59 @@ if get:
 
     llibres = df
     llibres.to_pickle(carpeta+pkl_name_ll)
+
+
+if len(llibres['language_code'].unique()) > 10:
+    get = True
+else:
+    get = False
+    print("Column language_code already preprocessed. Loading...")
+
+if get:
+    country_continent = {
+    'no_identificat': 'No identificado', # Código no identificable
+    'en': 'Europa', # Inglés, comúnmente usado en Europa
+    'jpn': 'Asia', # Japón
+    'fil': 'Asia', # Filipinas
+    'spa': 'Europa', # España
+    'per': 'América', # Perú
+    'slo': 'Europa', # Eslovenia
+    'ger': 'Europa', # Alemania
+    'ara': 'Asia', # Países árabes, principalmente en Asia
+    'gre': 'Europa', # Grecia
+    'msa': 'Asia', # Malasia
+    'rum': 'Europa', # Rumania
+    'ind': 'Asia', # India
+    'fre': 'Europa', # Francia
+    'nl': 'Europa', # Países Bajos
+    'tur': 'Europa', # Turquía (transcontinental, pero mayormente en Europa)
+    'ita': 'Europa', # Italia
+    'cze': 'Europa', # República Checa
+    'amh': 'Asia', # Amhárico, Etiopía
+    'swe': 'Europa', # Suecia
+    'por': 'Europa', # Portugal
+    'rus': 'Europa', # Rusia (transcontinental, pero mayormente en Europa)
+    'fin': 'Europa', # Finlandia
+    'mal': 'Asia', # Malasia o Maldivas
+    'ben': 'Asia', # Benín
+    'hun': 'Europa', # Hungría
+    'dan': 'Europa', # Dinamarca
+    'tam': 'Asia', # Tamil, hablado en India y Sri Lanka
+    'pol': 'Europa', # Polonia
+    'tgl': 'Asia', # Tagalo, Filipinas
+    'mul': 'No identificado', # Código no identificable
+    'kor': 'Asia', # Corea
+    'kan': 'Asia', # Kannada, India
+    'nno': 'Europa', # Noruego Nynorsk
+    'srp': 'Europa', # Serbio
+    'scr': 'Europa', # Croata
+    'vie': 'Asia', # Vietnamita
+    'zho': 'Asia' # Chino
+    }
+    llibres['language_code'] = llibres['language_code'].apply(lambda x: country_continent[x])
+    print("Done preprocessing language_code")
+    llibres.to_pickle(carpeta+pkl_name_ll)
+    llibres.to_csv(carpeta+csv_name_ll, index=False)
 
 # Create vector for each book
 try:
@@ -510,7 +561,7 @@ def scale(vector, min_ant = 0, max_ant = 5, min_nou = 0, max_nou = 1):
 
 if get:
     # Make dummies for categorical variables and drop the original columns
-    llibres_dummies = pd.get_dummies(df, columns=['language_code', 'format', 'series', 'estil_literari', 'complexitat', 'caracteristiques', 'desenvolupament_del_personatge', 'accio_o_reflexio', 'epoca', 'detall_cientific'], dtype=bool)
+    llibres_dummies = pd.get_dummies(df, columns=['language_code', 'format', 'estil_literari', 'complexitat', 'desenvolupament_del_personatge', 'epoca', 'detall_cientific'], dtype=bool)
     # Eliminar totes les columnes que no siguin booleanes
     for column in llibres_dummies.columns:
         if llibres_dummies[column].dtype != bool:
@@ -526,10 +577,46 @@ if get:
     llibres_dummies['average_rating'] = scaled_av_rating
     llibres_dummies['num_pages'] = scaled_num_pages
 
+    # Process genre column
+    unique_genres = set()
+    for index, row in llibres.iterrows():
+        for genre in row['genres']:
+            unique_genres.add(genre)
+    unique_genres = list(unique_genres)
+    print(unique_genres)
+    print(len(unique_genres))
+    # Create a column for each genre
+    for genre in unique_genres:
+        llibres_dummies[genre] = False
+    # For each row, set the genre column to True if the book has that genre
+    for index, row in llibres.iterrows():
+        for genre in row['genres']:
+            llibres_dummies.at[index, genre] = True
+    llibres_dummies = llibres_dummies.drop('bestseller', axis=1)
+
     # Make vector of each book and add it to the dataframe
     vectors = np.array(llibres_dummies).astype(float)
+
+    ll = ['language_code', 'format', 'estil_literari', 'complexitat', 'desenvolupament_del_personatge', 'epoca', 'detall_cientific']
+    db = llibres[ll]
+    eo = db.nunique().to_list()
+    eo.append(1)
+    eo.append(1)
+    eo.append(8)
+    weights = []
+    for x in eo:
+        for i in range(x):
+            weights.append(x)
+    weights = np.array(weights)
+    weights
+    from sklearn.preprocessing import MinMaxScaler
+    # Scale between 0.1 and 0.9
+    scaler = MinMaxScaler(feature_range=(0.5, 0.9))
+    weights = scaler.fit_transform(weights.reshape(-1, 1))
+    weights = weights.reshape(-1)
+
     # Make vectors a list of arrays
-    vectors = [np.array(vector) for vector in vectors]
+    vectors = [np.array(vector)*weights for vector in vectors]
     # Add vectors to dataframe
     df['vector'] = vectors
     llibres = df
