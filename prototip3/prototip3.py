@@ -24,9 +24,9 @@ cases=cases.iloc[1:]
 
 cbr = CBR(cases,clustering,books)
 
-
+print(cases.loc[1])
+print(cases.loc[1].vector)
 recomanacio = cbr.recomana(nou_cas)
-print("Usuari final:")
 print('Recomanació final:')
 for llibre in recomanacio.llibres_recomanats:
     print(books[books.book_id==int(llibre)]['title'].iloc[0])

@@ -36,18 +36,6 @@ class CBR:
             case_vector_np = np.array(case.vector).reshape(1,-1)
             return cosine_similarity(user_vector_np, case_vector_np)[0][0]
           
-    def retrieve(self, user):
-        """
-        Return 10 most similar users
-        """
-        vector = user.vector.reshape(1,-1)
-        cl=self.clustering.predict(vector)[0]
-        veins = pd.DataFrame(self.cases[self.cases.cluster == cl])
-        #distancies = veins['vector'].apply(lambda x: np.linalg.norm(vector - np.array(list(x)), axis=1)) #distancia euclidea 
-        distancies = veins.apply(lambda x: self.similarity(user,x,'cosine'),axis=1)
-        veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
-
-        return veins_ordenats[:5] if len(veins_ordenats)>=10 else veins_ordenats
     
     def reuse(self, user,users):
         
@@ -245,6 +233,7 @@ class CBR:
 
             kmeans = KMeans(n_clusters=self.__calculate_optimal_k(wcss, k_range))
             base_actualitzada.cluster = kmeans.fit_predict(vectors_actualitzats)
+            self.clustering = kmeans
             self.cases = base_actualitzada 
         
 
