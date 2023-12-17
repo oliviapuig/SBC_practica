@@ -199,7 +199,7 @@ class CBR:
             #si el llibre pertany a un dels llibres recomanats del reuse
             if llibre in ll:
                 for i in range(len(casos)): #mirem casos el retrieve
-                    if llibre in casos[i][0]['llibres_recomanats']: #mirar si el llibre es troba a la llista de llibres recomanats del cas similar
+                    if llibre in self.cases.iloc[i]['llibres_recomanats']: #mirar si el llibre es troba a la llista de llibres recomanats del cas similar
                         justificacio.append(' perquè hi ha lectors com tu que els hi agrada!')
                         break
                 print(justificacio)
