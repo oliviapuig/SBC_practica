@@ -27,7 +27,7 @@ except:
     print("Starting to create casos.pkl")
     get = True
 
-# Make a dataset with users that have rated more than 10 books and less than 50
+# Make a dataset with users that have rated more than 10 books and less than 20
 if get:
     # Descarregar el dataset
     url = path_reviews_dataset
@@ -50,7 +50,7 @@ if get:
     df = pd.DataFrame(primeras_500_filas)
     df = df[['user_id', 'book_id', 'rating']]
 
-    # Plot rating distribution and save to eoo/rating_distribution.png
+    # Plot rating distribution and save to rating_distribution.png
     sns.set_style('darkgrid')
     plt.figure(figsize=(10, 6))
     sns.countplot(x='rating', data=df)
