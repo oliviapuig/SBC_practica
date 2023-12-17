@@ -118,7 +118,7 @@ class CBR:
             user['puntuacions_llibres'].append(puntuacio)
         return user
     
-    def retain(self, user,users):
+    def retain(self, user, users, ll):
         """
         calculem similitud entre casos SENSE TENIR EN COMPTE RECOMANACIONS
         - si cas molt diferent → ens el quedem
@@ -146,40 +146,100 @@ class CBR:
                 elif i == len(user['puntuacions_llibres'])-1:
                     self.cases.append(user, ignore_index=True)
         
-        self.utilitat(user,users) # actualitzem utilitat
+        self.utilitat(user,ll,users) # actualitzem utilitat
 
-    def utilitat(self, user,users):
+    def utilitat(self, user, llibres, casos):
         """
+        user = usuari final
+        llibres = llibres del reuse
+        casos = casos del retrieve
+        ---------------------
         Calcula la utilitat de l'usuari
-        com calcular utilitat:
             - calculem utilitat al retain
             - cas utilitzat → llibre del cas és recomanat → llibre recomanat bona valoració → ENTENEM QUE EL CAS ÉS ÚTIL
-            - un cas pot ser uttil de manera negativa
-                - si el seu llibre es recomanat i rep una valoracio negativa
-            - si un lllibre dle cas ha estat recomant → +0.5
-                - si aquest llibre ha estat valorat (1 o 5) → +0.5
+            - utilitat progressiva:
+                - si llibre del cas passa reuse → +0.5
+                - si llibre del cas passa revise → +0.5
+                - si llibre del cas passa review → +0.5
         """
-
-        for i in range(len(user['llibres_recomanats'])): #per cada llibre recomanat
-            for k in range(len(users)): #per cada cas similar utilitzat
-                #print('son iguals',user['llibres_recomanats'][i], self.cases.iloc[k]['llibres_recomanats'])
-                if user['llibres_recomanats'][i] in self.cases.iloc[k]['llibres_recomanats']: #si el llibre recomanat es troba a la llista de llibres recomanats del cas similar
+        comptador = 0
+        for llibre in llibres: #si el llibre ha passat la fase reuse
+            for k in range(len(casos)):
+                if llibre in self.cases.iloc[k]['llibres_recomanats']:
                     self.cases.iloc[k]['utilitat'] += 0.5
-                    if user['puntuacions_llibres'][i] == 1 or user['puntuacions_llibres'][i] == 5: #si el llibre recomanat ha rebut una valoracio de 1<x<2 o 4<x<5
+                    if llibre in user['llibres_recomanats']: #si el llibre ha passat la fase revise
                         self.cases.iloc[k]['utilitat'] += 0.5
-                        
+                        if user['puntuacions_llibres'][comptador] == 1 or user['puntuacions_llibres'][comptador] == 5: #si el llibre recomanat ha rebut una valoracio de 1<x<2 o 4<x<5
+                            self.cases.iloc[k]['utilitat'] += 0.5
+            comptador += 1
+    
+    def justifica(self, user, users, llibres):
+        """
+        user = usuari final
+        llibres = llibres del reuse
+        users = casos del retrieve
+        ---------------------
+        Justifica per que li recomanem un llibre a l'usuari:
+        - si el llibre procedeix directament d'un dels casos del retrive (és a dir, el llibre és de l'output del reuse i del revise) 
+            --> Justificacio: 'perquè hi ha lectors com tu que els hi agrada!'
+        - si el llibre procedeix del revise, és a dir, no és directament d'un cas del retrive 
+            --> Justificacio: 'perquè és un llibre que et podria agradar ja que té aquestes 3 caracteristiques!'
+            - per saber quines caracteristiques volem destacar agafem tots els users de la base de dades de casos 
+                que hagin llegit aquest llibre, fem la mitjana entre els seus vectors i comparem amb el nostre 
+                vector usuari: less tres components més semblants seran les tres caracteristiques que destacarem
+        - si el llibre procedeix de la pregunta de quin tipus de recomanació vol el user
+            --> Justificació: 'perque vols una recomanació de x tipus1'
+        """
+        casos = users #casos retrieve
+        ll = llibres #llibres el reuse
+
+        for llibre in user['llibres_recomanats']:
+            justificacio = []
+            justificacio.append(f'Et recomanem el llibre {self.books.loc[self.books[self.books["book_id"] == int(llibre)].index[0],"title"]}')
+            
+            #si el llibre pertany a un dels llibres recomanats del reuse
+            if llibre in ll:
+                for i in range(len(casos)): #mirem casos el retrieve
+                    if llibre in casos[i][0]['llibres_recomanats']: #mirar si el llibre es troba a la llista de llibres recomanats del cas similar
+                        justificacio.append(' perquè hi ha lectors com tu que els hi agrada!')
+                        break
+                print(justificacio)
+                pass
+            
+            #si el llibre correspon a la pregunta de "quin tipus de recomanació vols?"
+            elif llibre == user['llibres_recomanats'][3]:
+                justificacio.append(f' perquè vols una recomanació {user["tipus_recomanacio"]}')
+                print(justificacio)
+                pass
+
+            #si el llibre pertany a un dels llibres recomanats del revise
+            else:
+                #agafem tots els users de la base de dades de casos que hagin llegit aquest llibre
+                users_llibre = self.cases[self.cases['llibres_recomanats'].apply(lambda x: llibre in x)]
+                #fem la mitjana entre els seus vectors
+                vector_mitja = np.mean(np.array(users_llibre['vector'].tolist()), axis=0)
+                #comparem amb el nostre vector usuari: less tres components més semblants seran les tres caracteristiques que destacarem
+                vector_user = user['vector']
+                similaritat = self.similarity(vector_user, vector_mitja, 'cosine')
+                indexs = np.argsort(similaritat)[:3]
+                caracteristiques = np.array(self.books.columns)[indexs]
+                justificacio.append(f" perquè té aquestes 3 caracteristiques que t'agraden: {caracteristiques[0]}, {caracteristiques[1]} i {caracteristiques[2]}")
+                print(justificacio)
+                pass
+
     def recomana(self, user):
         # user es un diccionari!!!
         users = self.retrieve(user)
         ll = self.reuse(user,users)
         user = self.revise(user, ll)
         user = self.review(user)
-        self.retain(user,users)
+        self.retain(user,ll,users)
         if self.iteracions%100==0 and self.iteracions!=0 and self.iteracions!=1:
             self.actualitza_base()
             print('ei nova base amb iteracio\n', self.iteracions)
         #print(self.cases[self.cases.utilitat >0])
         self.iteracions+=1
+        self.justifica(user, users, ll)
         return user
     
     def __calculate_optimal_k(self,inertia,k_range):
