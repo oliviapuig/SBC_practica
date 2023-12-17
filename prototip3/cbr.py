@@ -3,6 +3,7 @@ from sklearn.metrics import DistanceMetric
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
+import random
 
 class CBR:
     def __init__(self, cases, clustering, books): #cases és el pandas dataframe de casos
@@ -41,9 +42,7 @@ class CBR:
         vector = user.vector.reshape(1,-1)
         cl=self.clustering.predict(vector)[0]
         veins = self.cases[self.cases.cluster == cl]
-        
-        distancies = veins['vector'].apply(lambda x: np.linalg.norm(vector - np.array(list(x)), axis=1)) #distancia euclidea 
-      
+        distancies = veins.apply(lambda x: self.similarity(user,x,'cosine'),axis=1)
         veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
         return veins_ordenats[:5] if len(veins_ordenats)>=10 else veins_ordenats
@@ -95,20 +94,21 @@ class CBR:
             llibres_del_cluster = self.books[self.books['cluster'] == int(cluster.iloc[0])]
             for i,ll in llibres_del_cluster.iterrows():
                 if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_recomanat, "cosine"):
+                    print('he entrat')
                     llibres[llibres.index(llibre)] = ll['book_id']
                     break
         user["llibres_recomanats"] = llibres
         return user
     
     def review(self, user):
-
-        # user és un diccionari!!!
         """
         L'usuari valora els tres llibres
         """
         for llibre in user['llibres_recomanats']:
             while True:
-                puntuacio = int(input(f"Quina puntuació li donaries a la recomanació del llibre {self.books.loc[self.books[self.books['book_id'] == int(llibre)].index[0],'title']}? (0-5) ")) #agafo titol del llibre
+                print(f"Quina puntuació li donaries a la recomanació del llibre {self.books.loc[self.books[self.books['book_id'] == int(llibre)].index[0],'title']}? (0-5) ")
+                puntuacio = random.randint(1,5)
+                print(puntuacio)
                 if puntuacio >= 0 and puntuacio <= 5 and isinstance(puntuacio, int):
                     break
                 else:
@@ -116,7 +116,7 @@ class CBR:
             user['puntuacions_llibres'].append(puntuacio)
         return user
     
-    def retain(self, user):
+    def retain(self, user,users):
         """
         calculem similitud entre casos SENSE TENIR EN COMPTE RECOMANACIONS
         - si cas molt diferent → ens el quedem
@@ -136,7 +136,7 @@ class CBR:
             similarities.append(a)
 
         if np.average(similarities) <= 0.6:
-            self.cases.append(user, ignore_index=True)
+            self.cases.loc[len(self.cases)] = user
         else:
             for i in range(len(user['puntuacions_llibres'])):
                 if user['puntuacions_llibres'][i] > 2 or user['puntuacions_llibres'][i] < 4:
@@ -144,9 +144,9 @@ class CBR:
                 elif i == len(user['puntuacions_llibres'])-1:
                     self.cases.append(user, ignore_index=True)
         
-        self.utilitat(user) # actualitzem utilitat
+        self.utilitat(user,users) # actualitzem utilitat
 
-    def utilitat(self, user):
+    def utilitat(self, user,users):
         """
         Calcula la utilitat de l'usuari
         com calcular utilitat:
@@ -157,10 +157,10 @@ class CBR:
             - si un lllibre dle cas ha estat recomant → +0.5
                 - si aquest llibre ha estat valorat (1 o 5) → +0.5
         """
-        users = self.retrieve(user) #casos que hem utilitzart per fer la recomanacio --> llisat de tuples (index, similitud)
 
         for i in range(len(user['llibres_recomanats'])): #per cada llibre recomanat
             for k in range(len(users)): #per cada cas similar utilitzat
+                #print('son iguals',user['llibres_recomanats'][i], self.cases.iloc[k]['llibres_recomanats'])
                 if user['llibres_recomanats'][i] in self.cases.iloc[k]['llibres_recomanats']: #si el llibre recomanat es troba a la llista de llibres recomanats del cas similar
                     self.cases.iloc[k]['utilitat'] += 0.5
                     if user['puntuacions_llibres'][i] == 1 or user['puntuacions_llibres'][i] == 5: #si el llibre recomanat ha rebut una valoracio de 1<x<2 o 4<x<5
@@ -172,11 +172,12 @@ class CBR:
         ll = self.reuse(user,users)
         user = self.revise(user, ll)
         user = self.review(user)
-        self.retain(user)
-        self.iteracions+=1
-        if self.iteracions%100==0:
+        self.retain(user,users)
+        if self.iteracions%100==0 and self.iteracions!=0 and self.iteracions!=1:
             self.actualitza_base()
-        print(self.cases[self.cases.utilitat >0])
+            print('ei nova base amb iteracio\n', self.iteracions)
+        #print(self.cases[self.cases.utilitat >0])
+        self.iteracions+=1
         return user
     
     def __calculate_optimal_k(self,inertia,k_range):
@@ -218,6 +219,9 @@ class CBR:
             veins_no_utils = self.cases[self.cases.iloc[indexs.flatten()]['utilitat']==0].index
             base_actualitzada = self.cases.drop(veins_no_utils)
 
+        if casos_utils.empty:
+            base_actualitzada=self.cases
+        
         vectors_actualitzats=list(base_actualitzada.vector)
         wcss = []
         k_range = range(1,11)
@@ -228,6 +232,7 @@ class CBR:
 
         kmeans = KMeans(n_clusters=self.__calculate_optimal_k(wcss, k_range))
         base_actualitzada.cluster = kmeans.fit_predict(vectors_actualitzats)
+        self.clustering = kmeans
         self.cases = base_actualitzada 
         
 
