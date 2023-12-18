@@ -229,10 +229,10 @@ class CBR:
     def recomana(self, user):
         # user es un diccionari!!!
         users = self.retrieve(user)
-        ll = self.reuse(user,users)
+        ll = self.reuse(user, users)
         user = self.revise(user, ll)
         user = self.review(user)
-        self.retain(user,ll,users)
+        self.retain(user, ll, users)
         if self.iteracions%100==0 and self.iteracions!=0 and self.iteracions!=1:
             self.actualitza_base()
             print('ei nova base amb iteracio\n', self.iteracions)

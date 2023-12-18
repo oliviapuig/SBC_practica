@@ -36,7 +36,18 @@ class CBR:
             case_vector_np = np.array(case.vector).reshape(1,-1)
             return cosine_similarity(user_vector_np, case_vector_np)[0][0]
           
-    
+    def retrieve(self, user):
+        """
+        Return 10 most similar users
+        """
+        vector = user.vector.reshape(1,-1)
+        cl=self.clustering.predict(vector)[0]
+        veins = self.cases[self.cases.cluster == cl]
+        distancies = veins.apply(lambda x: self.similarity(user,x,'cosine'),axis=1)
+        veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
+
+        return veins_ordenats[:5] if len(veins_ordenats)>=10 else veins_ordenats
+
     def reuse(self, user,users):
         
         # users és una llista de tuples (usuari, similitud)
