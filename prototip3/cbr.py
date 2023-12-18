@@ -4,12 +4,13 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 import random
+import pandas as pd
 
 class CBR:
     def __init__(self, cases, clustering, books): #cases és el pandas dataframe de casos
         self.cases = cases
         self.clustering = clustering
-        self.books=books
+        self.books = books
         self.iteracions = 0
     
     def __str__(self):
@@ -235,6 +236,80 @@ class CBR:
         self.clustering = kmeans
         self.cases = base_actualitzada 
         
+    def __scale(self, vector, min_ant = 0, max_ant = 5, min_nou = 0, max_nou = 1):
+        """
+        Passar de una valoracio [0-5] a una puntuació [-1-1]
+        """
+        from sklearn.preprocessing import MinMaxScaler
+        if isinstance(vector, int):
+            vector = np.array([vector])
+        if vector.shape[0] > 1:
+            min_ant = min(vector)
+            #max_ant = max(vector)
+        escalador = MinMaxScaler(feature_range=(min_nou, max_nou))
+        escalador.fit([[min_ant], [max_ant]])
+        return escalador.transform(vector.reshape(-1, 1)).flatten()
+
+    def __get_attributes(self, llibres_usuari, val_llibres):
+        """
+        Aconseguir el vector d'atributs d'usuari a partir dels llibres que ha llegit
+        """
+        len_vector = len(self.books["vector"].iloc[0])
+        vector_usuari = np.zeros(len_vector)
+        for ll, val in zip(llibres_usuari, val_llibres):
+            vector_usuari += np.array(self.books[self.books["book_id"] == int(ll)]["vector"].iloc[0]) * self.__scale(val)
+        np.round(vector_usuari, 1)
+
+        vector_usuari = self.__scale(vector_usuari, min(vector_usuari), max(vector_usuari), 0, 1)
+
+        # Si hay vectores con valores entre -0.01 y 0.01, los ponemos a 0
+        for i in range(len(vector_usuari)):
+            if vector_usuari[i] < 0.01 and vector_usuari[i] > -0.01:
+                vector_usuari[i] = 0
+
+        return np.round(vector_usuari, 4)
+
+    def inicia(self, fitxer):
+        """
+        Agafa el fitxer, l'obra i posa les dades del cas a una nova base de dades.
+        """
+        usuaris = {}
+        with open(fitxer, 'rb') as arxiu:
+            for linia in arxiu:
+                # Split de la linia por espacios
+                linia = linia.decode("utf-8").split()
+                # La linia[0] es el id del usuario
+                if linia[0] not in usuaris:
+                    usuaris[linia[0]] = {"llibres_usuari": [], "val_llibres": []}
+                # La linia[1] es el id del libro
+                # Aseguramos que el libro existe
+                assert int(linia[1]) in self.books.book_id.values, f"El llibre {linia[1]} no existeix"
+                # Aseguramos que el libro no haya estado valorado por el usuario
+                assert int(linia[1]) not in usuaris[linia[0]]["llibres_usuari"], f"El llibre {linia[1]} ja ha estat valorat per l'usuari {linia[0]}"
+                usuaris[linia[0]]["llibres_usuari"].append(int(linia[1]))
+                # La linia[2] es la valoracion del libro
+                usuaris[linia[0]]["val_llibres"].append(int(linia[2]))
+        
+        for user in usuaris:
+            vector_usuari = self.__get_attributes(usuaris[user]["llibres_usuari"], usuaris[user]["val_llibres"])
+            usuaris[user]["vector"] = vector_usuari
+            # Predict del cluster
+            usuaris[user]["cluster"] = self.clustering.predict(vector_usuari.reshape(1,-1))[0]
+            # Añadimos los libros recomendados
+            usuaris[user]["llibres_recomanats"] = []
+            usuaris[user]["puntuacions_llibres"] = []
+            usuaris[user]["utilitat"] = 0
+        # Añadimos los usuarios a una nueva base de datos
+        db_nou = pd.DataFrame(usuaris).T
+        # Afegir columna del user_id
+        db_nou["user_id"] = db_nou.index
+        db_nou.reset_index(drop=True, inplace=True)
+        # Reordenar las columnas
+        db_nou = db_nou[["user_id", "llibres_usuari", "val_llibres", "llibres_recomanats", "puntuacions_llibres", "cluster", "utilitat", "vector"]]
+        for i in range(len(db_nou)):
+            db_nou.at[i, 'vector'] = np.array(db_nou.at[i, 'vector'])
+
+        return db_nou
 
 
             
