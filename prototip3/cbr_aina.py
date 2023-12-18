@@ -4,12 +4,13 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 import random
+import pandas as pd
 
 class CBR:
     def __init__(self, cases, clustering, books): #cases és el pandas dataframe de casos
         self.cases = cases
         self.clustering = clustering
-        self.books=books
+        self.books = books
         self.iteracions = 0
     
     def __str__(self):
@@ -42,14 +43,12 @@ class CBR:
         vector = user.vector.reshape(1,-1)
         cl=self.clustering.predict(vector)[0]
         veins = self.cases[self.cases.cluster == cl]
-        
-        distancies = veins['vector'].apply(lambda x: np.linalg.norm(vector - np.array(list(x)), axis=1)) #distancia euclidea 
-        #distancies = veins['vector'].apply(lambda x: self.similarity(user,x,'cosine'))
+        distancies = veins.apply(lambda x: self.similarity(user,x,'cosine'),axis=1)
         veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
         return veins_ordenats[:5] if len(veins_ordenats)>=10 else veins_ordenats
     
-    def reuse(self, user,users):
+    def reuse(self, user, users):
         
         # users és una llista de tuples (usuari, similitud)
         """
@@ -58,15 +57,23 @@ class CBR:
         # Cogemos los vectores de los libros recomendados por los usuarios similares
         vector_llibres_recom = []
         book_ids = []
+        llibres_recomanats_afegits = set(user['llibres_recomanats']) # Conjunto de libros recomendados ya añadidos
+
+         
         for u, _ in users:
-            for llibre in self.cases.iloc[u]['llibres_recomanats']:
-                v_llibre = list(self.books[self.books.book_id == int(llibre)]['vector'])[0]
-                b_id = int(self.books[self.books.book_id == int(llibre)]['book_id'].iloc[0])
-                vector_llibres_recom.append(v_llibre)
-                book_ids.append(b_id)
+            for llibre in self.cases.iloc[u]['llibres_recomanats']: # Cogemos los libros recomendados por el usuario
+                if llibre not in llibres_recomanats_afegits:
+                # si el libro no se ha leido el usuario actual y no se ha recomendado ya, continua, sino coge el siguiente libro
+                    if llibre not in user['llibres_usuari']:
+                        v_llibre = list(self.books[self.books.book_id == int(llibre)]['vector'])[0] # Cogemos el vector del libro
+                        b_id = int(self.books[self.books.book_id == int(llibre)]['book_id'].iloc[0]) # Cogemos el id del libro
+                        vector_llibres_recom.append(v_llibre) # Añadimos el vector a la lista de vectores
+                        book_ids.append(b_id) # Añadimos el id a la lista de ids
+                        llibres_recomanats_afegits.add(llibre)
+                    
         # El resultado deberian ser 15 vectores de 85 elementos
-        vector_user = user.vector.reshape(1,-1)
-        vector_llibres_recom = np.array(vector_llibres_recom)
+        vector_user = user.vector.reshape(1,-1) # Cogemos el vector del usuario
+        vector_llibres_recom = np.array(vector_llibres_recom) # Pasamos la lista de vectores a un array de numpy
 
         # Hacemos un KNN con los vectores de los libros recomendados
         knn = NearestNeighbors(n_neighbors=3)
@@ -77,28 +84,88 @@ class CBR:
         llibres_recom = []
         for i in indices[0]:
             llibres_recom.append(book_ids[i])
-
+        
         return llibres_recom
 
     def revise(self, user, llibres):
         """
-        Ens quedem amb els 3 llibres amb més puntuació i eliminem puntuacions        
+        Ens quedem amb els 2 llibres amb més puntuació i eliminem puntuacions        
         Mirem la columna de clustering dels 3 llibres recomanats i calculem la similitud de l'usuari amb els llibres del cluster
         Si la similitud entre l'usuari i un llibre és superior a la de l'usuari i un dels llibres recomanats, intercanviem els llibres
         """
-     
-        user["llibres_recomanats"].append(llibres)
-        for llibre in llibres:
-            cluster = self.books[self.books.book_id==int(llibre)]["cluster"]
-            llibre_recomanat = self.books[self.books.book_id==int(llibre)].iloc[0]
-            # Coger todos los libros que coincidan con el cluster del libro recomendado
-            llibres_del_cluster = self.books[self.books['cluster'] == int(cluster.iloc[0])]
-            for i,ll in llibres_del_cluster.iterrows():
-                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_recomanat, "cosine"):
-                    print('he entrat')
-                    llibres[llibres.index(llibre)] = ll['book_id']
-                    break
-        user["llibres_recomanats"] = llibres
+        #user["llibres_recomanats"] = llibres
+        for llibre in llibres: # Bucle executat 3 vegades
+            cluster = self.books[self.books.book_id==int(llibre)]["cluster"].iloc[0]
+            llibre_recomanat = self.books[self.books.book_id==int(llibre)].iloc[0]  # Tot el llibre recomanat
+            llibres_del_cluster = self.books[self.books['cluster'] == int(cluster)] # Tots els llibres del cluster
+            for i, ll in llibres_del_cluster.iterrows():
+                if ll['book_id'] not in llibres and ll['book_id'] not in user["llibres_usuari"]: # Si no esta recomanat i no l'ha llegit l'usuari
+                    if len(llibres) == 3:
+                        if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_recomanat, "cosine"):
+                            print('he entrat')
+                            llibres[llibres.index(llibre)] = ll['book_id']  # Canviem el llibre recomanat per un altre del cluster
+                            llibre_recomanat = ll
+                            break
+                    else:
+                        # Recalcula i agafa el següent llibre més probable
+                        user["llibres_recomanats"].append(ll['book_id'])
+                        pass
+
+        user["llibres_recomanats"] = llibres[:2]
+
+        print("A continuació, et demanarem algunes preferències per millorar la recomanació.")
+
+        continuar = True
+        while continuar:
+
+            # Preguntas de preferencias al usuario
+            #preferencia_llibre = input("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()
+            #preferencia_popularitat = input("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ").lower()
+            preferencia_llibre = np.random.choice(['semblants', 'explorar'])
+            preferencia_popularitat = np.random.choice(['bestseller', 'no tan popular'])
+
+            # Lògica per ajustar les recomanacions segons les preferències del usuari
+            if preferencia_llibre == 'semblants':
+                if preferencia_popularitat == 'bestseller':
+                    llibres_del_cluster = llibres_del_cluster[llibres_del_cluster['bestseller'] == True]
+                    distancies = llibres_del_cluster.apply(lambda x: self.similarity(user, x, 'cosine'), axis=1)
+                    index_llibre_mes_semblant = distancies.idxmax()
+                    user["llibres_recomanats"].append(llibres_del_cluster.loc[index_llibre_mes_semblant, 'book_id'])
+                    continuar = False
+                
+                elif preferencia_popularitat == 'no tan popular':
+                    llibres_del_cluster = llibres_del_cluster[llibres_del_cluster['bestseller'] == False]
+                    distancies = llibres_del_cluster.apply(lambda x: self.similarity(user, x, 'cosine'), axis=1)
+                    index_llibre_mes_semblant = distancies.idxmax()
+                    user["llibres_recomanats"].append(llibres_del_cluster.loc[index_llibre_mes_semblant, 'book_id'])
+                    continuar = False
+                    
+                else:
+                    print("Opció no vàlida per preferencia_popularitat. Si us plau, respon 'bestseller' o 'no tan popular'.")
+
+            elif preferencia_llibre == 'explorar':
+                distancies_cluster = self.clustering.transform(user.vector.reshape(1, -1))
+                cluster_mes_proper = distancies_cluster.argsort()[0][1]
+                
+                # Filtra els llibres del cluster més proper
+                llibres_cluster_mes_proper = self.books[self.books['cluster'] == int(cluster_mes_proper)]
+
+                # Filtra pels llibres que són bestsellers o no, segons la preferència de l'usuari
+                if preferencia_popularitat == 'bestseller':
+                    llibres_recomanats_cluster_mes_proper = llibres_cluster_mes_proper[llibres_cluster_mes_proper['bestseller'] == True]
+                elif preferencia_popularitat == 'no tan popular':
+                    llibres_recomanats_cluster_mes_proper = llibres_cluster_mes_proper[llibres_cluster_mes_proper['bestseller'] == False]
+                else:
+                    print("Opció no vàlida per preferencia_popularitat. Si us plau, respon 'bestseller' o 'no tan popular'.")
+                    return user
+                
+                # Afegeix un llibre aleatori de la llista filtrada als llibres recomanats de l'usuari
+                user["llibres_recomanats"].append(llibres_recomanats_cluster_mes_proper.sample(1)['book_id'].values[0])
+                continuar = False
+
+            else:
+                print("Opció no vàlida per preferencia_llibre. Si us plau, respon 'semblants' o 'explorar'.")
+
         return user
     
     def review(self, user):
@@ -108,7 +175,17 @@ class CBR:
         for llibre in user['llibres_recomanats']:
             while True:
                 print(f"Quina puntuació li donaries a la recomanació del llibre {self.books.loc[self.books[self.books['book_id'] == int(llibre)].index[0],'title']}? (0-5) ")
-                puntuacio = random.randint(1,5)
+                llibre_recomanat = self.books[self.books.book_id==int(llibre)].iloc[0]
+                llibres = self.books[self.books.book_id.isin(list(map(int, user['llibres_usuari'])))] #agafem els llibres que s'ha llegit l'usuari
+                sim = llibres.apply(lambda x: self.similarity(llibre_recomanat,x,'cosine'),axis=1) #similaritat entre el llibre recomanat i els llibres llegits per l'usuari
+                #llibres.loc[sim.nlargest(3).index] #agafo els índexs dels llibres més similars
+                #list(llibres.loc[sim.nlargest(3).index]['book_id']) books id dels llibres per tornar-los a agafar dels recomenats
+                books_id_similars = list(llibres.loc[sim.nlargest(3).index]['book_id'])
+                indexos = [i for i, el in enumerate(user['llibres_usuari']) if int(el) in books_id_similars]  #agafo indexs dins la llista dels llibres per accedir a la valoracio
+                puntuacio = round(np.mean([user['val_llibres'][i] for i in indexos])) #mitjana de les valoracions dels llibres similars
+                puntuacio = puntuacio if puntuacio != 0 else 1
+                #print(books_id_similars)
+                #print(indexos)
                 print(puntuacio)
                 if puntuacio >= 0 and puntuacio <= 5 and isinstance(puntuacio, int):
                     break
@@ -145,7 +222,7 @@ class CBR:
                 elif i == len(user['puntuacions_llibres'])-1:
                     self.cases.append(user, ignore_index=True)
         
-        self.utilitat(user,ll,users) # actualitzem utilitat
+        self.utilitat(user, ll, users) # actualitzem utilitat
 
     def utilitat(self, user, llibres, casos):
         """
@@ -171,7 +248,7 @@ class CBR:
                         if user['puntuacions_llibres'][comptador] == 1 or user['puntuacions_llibres'][comptador] == 5: #si el llibre recomanat ha rebut una valoracio de 1<x<2 o 4<x<5
                             self.cases.iloc[k]['utilitat'] += 0.5
             comptador += 1
-    
+
     def justifica(self, user, users, llibres):
         """
         user = usuari final
@@ -207,7 +284,7 @@ class CBR:
             
             #si el llibre correspon a la pregunta de "quin tipus de recomanació vols?"
             elif llibre == user['llibres_recomanats'][2]:
-                justificacio.append(f' perquè vols una recomanació {user["tipus_recomanacio"]}')
+                justificacio.append(f' perquè vols una recomanació {user['tipus_recomanacio']}')
                 print(justificacio)
                 pass
 
@@ -225,14 +302,14 @@ class CBR:
                 justificacio.append(f" perquè té aquestes 3 caracteristiques que t'agraden: {caracteristiques[0]}, {caracteristiques[1]} i {caracteristiques[2]}")
                 print(justificacio)
                 pass
-
+                        
     def recomana(self, user):
         # user es un diccionari!!!
         users = self.retrieve(user)
         ll = self.reuse(user, users)
         user = self.revise(user, ll)
         user = self.review(user)
-        self.retain(user, ll, users)
+        self.retain(user, users, ll)
         if self.iteracions%100==0 and self.iteracions!=0 and self.iteracions!=1:
             self.actualitza_base()
             print('ei nova base amb iteracio\n', self.iteracions)
@@ -281,20 +358,97 @@ class CBR:
             base_actualitzada = self.cases.drop(veins_no_utils)
 
         if casos_utils.empty:
+            print('no hi ha nova!!!')
             base_actualitzada=self.cases
-        
-        vectors_actualitzats=list(base_actualitzada.vector)
-        wcss = []
-        k_range = range(1,11)
-        for i in k_range:
-            kmeans = KMeans(n_clusters=i, init='k-means++', random_state=42, n_init=10)
-            kmeans.fit(vectors_actualitzats)
-            wcss.append(kmeans.inertia_)
+        else:
+            print('hi ha nova!!!')
+            vectors_actualitzats=list(base_actualitzada.vector)
+            wcss = []
+            k_range = range(1,11)
+            for i in k_range:
+                kmeans = KMeans(n_clusters=i, init='k-means++', random_state=42, n_init=10)
+                kmeans.fit(vectors_actualitzats)
+                wcss.append(kmeans.inertia_)
 
-        kmeans = KMeans(n_clusters=self.__calculate_optimal_k(wcss, k_range))
-        base_actualitzada.cluster = kmeans.fit_predict(vectors_actualitzats)
-        self.cases = base_actualitzada 
+            kmeans = KMeans(n_clusters=self.__calculate_optimal_k(wcss, k_range))
+            base_actualitzada.cluster = kmeans.fit_predict(vectors_actualitzats)
+            self.clustering = kmeans
+            self.cases = base_actualitzada 
         
+    def __scale(self, vector, min_ant = 0, max_ant = 5, min_nou = 0, max_nou = 1):
+        """
+        Passar de una valoracio [0-5] a una puntuació [-1-1]
+        """
+        from sklearn.preprocessing import MinMaxScaler
+        if isinstance(vector, int):
+            vector = np.array([vector])
+        if vector.shape[0] > 1:
+            min_ant = min(vector)
+            #max_ant = max(vector)
+        escalador = MinMaxScaler(feature_range=(min_nou, max_nou))
+        escalador.fit([[min_ant], [max_ant]])
+        return escalador.transform(vector.reshape(-1, 1)).flatten()
+
+    def __get_attributes(self, llibres_usuari, val_llibres):
+        """
+        Aconseguir el vector d'atributs d'usuari a partir dels llibres que ha llegit
+        """
+        len_vector = len(self.books["vector"].iloc[0])
+        vector_usuari = np.zeros(len_vector)
+        for ll, val in zip(llibres_usuari, val_llibres):
+            vector_usuari += np.array(self.books[self.books["book_id"] == int(ll)]["vector"].iloc[0]) * self.__scale(val)
+        np.round(vector_usuari, 1)
+
+        vector_usuari = self.__scale(vector_usuari, min(vector_usuari), max(vector_usuari), 0, 1)
+
+        # Si hay vectores con valores entre -0.01 y 0.01, los ponemos a 0
+        for i in range(len(vector_usuari)):
+            if vector_usuari[i] < 0.01 and vector_usuari[i] > -0.01:
+                vector_usuari[i] = 0
+
+        return np.round(vector_usuari, 4)
+
+    def inicia(self, fitxer):
+        """
+        Agafa el fitxer, l'obra i posa les dades del cas a una nova base de dades.
+        """
+        usuaris = {}
+        with open(fitxer, 'rb') as arxiu:
+            for linia in arxiu:
+                # Split de la linia por espacios
+                linia = linia.decode("utf-8").split()
+                # La linia[0] es el id del usuario
+                if linia[0] not in usuaris:
+                    usuaris[linia[0]] = {"llibres_usuari": [], "val_llibres": []}
+                # La linia[1] es el id del libro
+                # Aseguramos que el libro existe
+                assert int(linia[1]) in self.books.book_id.values, f"El llibre {linia[1]} no existeix"
+                # Aseguramos que el libro no haya estado valorado por el usuario
+                assert int(linia[1]) not in usuaris[linia[0]]["llibres_usuari"], f"El llibre {linia[1]} ja ha estat valorat per l'usuari {linia[0]}"
+                usuaris[linia[0]]["llibres_usuari"].append(int(linia[1]))
+                # La linia[2] es la valoracion del libro
+                usuaris[linia[0]]["val_llibres"].append(int(linia[2]))
+        
+        for user in usuaris:
+            vector_usuari = self.__get_attributes(usuaris[user]["llibres_usuari"], usuaris[user]["val_llibres"])
+            usuaris[user]["vector"] = vector_usuari
+            # Predict del cluster
+            usuaris[user]["cluster"] = self.clustering.predict(vector_usuari.reshape(1,-1))[0]
+            # Añadimos los libros recomendados
+            usuaris[user]["llibres_recomanats"] = []
+            usuaris[user]["puntuacions_llibres"] = []
+            usuaris[user]["utilitat"] = 0
+        # Añadimos los usuarios a una nueva base de datos
+        db_nou = pd.DataFrame(usuaris).T
+        # Afegir columna del user_id
+        db_nou["user_id"] = db_nou.index
+        db_nou.reset_index(drop=True, inplace=True)
+        # Reordenar las columnas
+        db_nou = db_nou[["user_id", "llibres_usuari", "val_llibres", "llibres_recomanats", "puntuacions_llibres", "cluster", "utilitat", "vector"]]
+        for i in range(len(db_nou)):
+            db_nou.at[i, 'vector'] = np.array(db_nou.at[i, 'vector'])
+
+        return db_nou
 
 
             

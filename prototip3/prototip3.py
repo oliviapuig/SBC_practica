@@ -9,7 +9,6 @@ from cbr_aina import CBR
 import pickle
 import pandas as pd
 
-
 cases =pd.read_pickle('./data/casos.pkl')
 books = pd.read_pickle('./data/llibres.pkl')
 
