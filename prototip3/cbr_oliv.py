@@ -34,6 +34,7 @@ class CBR:
             user_vector_np = np.array(user.vector).reshape(1, -1)
             case_vector_np = np.array(case.vector).reshape(1,-1)
             return cosine_similarity(user_vector_np, case_vector_np)[0][0]
+    
           
     def retrieve(self, user):
         """
@@ -46,7 +47,7 @@ class CBR:
         veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
         return veins_ordenats[:5] if len(veins_ordenats)>=10 else veins_ordenats
-    
+        
     def reuse(self, user,users):
         
         # users és una llista de tuples (usuari, similitud)
@@ -56,15 +57,23 @@ class CBR:
         # Cogemos los vectores de los libros recomendados por los usuarios similares
         vector_llibres_recom = []
         book_ids = []
+        llibres_recomanats_afegits = set(user['llibres_recomanats']) # Conjunto de libros recomendados ya añadidos
+
+         
         for u, _ in users:
-            for llibre in self.cases.iloc[u]['llibres_recomanats']:
-                v_llibre = list(self.books[self.books.book_id == int(llibre)]['vector'])[0]
-                b_id = int(self.books[self.books.book_id == int(llibre)]['book_id'].iloc[0])
-                vector_llibres_recom.append(v_llibre)
-                book_ids.append(b_id)
+            for llibre in self.cases.iloc[u]['llibres_recomanats']: # Cogemos los libros recomendados por el usuario
+                if llibre not in llibres_recomanats_afegits:
+                # si el libro no se ha leido el usuario actual y no se ha recomendado ya, continua, sino coge el siguiente libro
+                    if llibre not in user['llibres_llegits']:
+                        v_llibre = list(self.books[self.books.book_id == int(llibre)]['vector'])[0] # Cogemos el vector del libro
+                        b_id = int(self.books[self.books.book_id == int(llibre)]['book_id'].iloc[0]) # Cogemos el id del libro
+                        vector_llibres_recom.append(v_llibre) # Añadimos el vector a la lista de vectores
+                        book_ids.append(b_id) # Añadimos el id a la lista de ids
+                        llibres_recomanats_afegits.add(llibre)
+                    
         # El resultado deberian ser 15 vectores de 85 elementos
-        vector_user = user.vector.reshape(1,-1)
-        vector_llibres_recom = np.array(vector_llibres_recom)
+        vector_user = user.vector.reshape(1,-1) # Cogemos el vector del usuario
+        vector_llibres_recom = np.array(vector_llibres_recom) # Pasamos la lista de vectores a un array de numpy
 
         # Hacemos un KNN con los vectores de los libros recomendados
         knn = NearestNeighbors(n_neighbors=3)
@@ -75,7 +84,7 @@ class CBR:
         llibres_recom = []
         for i in indices[0]:
             llibres_recom.append(book_ids[i])
-
+        
         return llibres_recom
     
 
@@ -87,17 +96,18 @@ class CBR:
         """
      
         user["llibres_recomanats"].append(llibres)
-        for llibre in llibres:
+        for llibre in user["llibres_recomanats"]:
             cluster = self.books[self.books.book_id==int(llibre)]["cluster"]
             llibre_recomanat = self.books[self.books.book_id==int(llibre)].iloc[0]
             # Coger todos los libros que coincidan con el cluster del libro recomendado
             llibres_del_cluster = self.books[self.books['cluster'] == int(cluster.iloc[0])]
             for i,ll in llibres_del_cluster.iterrows():
-                if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_recomanat, "cosine"):
-                    print('he entrat')
-                    llibres[llibres.index(llibre)] = ll['book_id']
-                    break
-        user["llibres_recomanats"] = llibres
+                if ll['book_id'] not in user["llibres_recomanats"] and not in user["llibres_llegits"]:
+                    if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_recomanat, "cosine"):
+                        print('he entrat')
+                        user["llibres_recomanats"][user["llibres_recomanats"].index(llibre)] = ll['book_id']
+                        break
+        user["llibres_recomanats"] = user["llibres_recomanats"][:3]
         return user
     
     def review(self, user):
