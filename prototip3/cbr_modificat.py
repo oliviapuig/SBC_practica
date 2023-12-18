@@ -101,7 +101,6 @@ class CBR:
             for i, ll in llibres_del_cluster.iterrows():
                 if ll['book_id'] not in llibres and ll['book_id'] not in user["llibres_usuari"]: # Si no esta recomanat i no l'ha llegit l'usuari
                     if len(llibres) == 3:
-                        #llibre_recomanat = self.books[self.books.book_id == int(llibres[0])].iloc[0] # Llibre recomanat amb pitjor puntuació
                         if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_recomanat, "cosine"):
                             print('he entrat')
                             llibres[llibres.index(llibre)] = ll['book_id']  # Canviem el llibre recomanat per un altre del cluster
@@ -120,8 +119,8 @@ class CBR:
         while continuar:
 
             # Preguntas de preferencias al usuario
-            #preferencia_llibre = input("¿Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()
-            #preferencia_popularitat = input("¿Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ").lower()
+            #preferencia_llibre = input("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()
+            #preferencia_popularitat = input("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ").lower()
             preferencia_llibre = np.random.choice(['semblants', 'explorar'])
             preferencia_popularitat = np.random.choice(['bestseller', 'no tan popular'])
 
@@ -145,7 +144,6 @@ class CBR:
                     print("Opció no vàlida per preferencia_popularitat. Si us plau, respon 'bestseller' o 'no tan popular'.")
 
             elif preferencia_llibre == 'explorar':
-                #cluster_usuari = user["cluster"].iloc[0]
                 distancies_cluster = self.clustering.transform(user.vector.reshape(1, -1))
                 cluster_mes_proper = distancies_cluster.argsort()[0][1]
                 
@@ -286,7 +284,7 @@ class CBR:
             
             #si el llibre correspon a la pregunta de "quin tipus de recomanació vols?"
             elif llibre == user['llibres_recomanats'][2]:
-                justificacio.append(f' perquè vols una recomanació {user["tipus_recomanacio"]}')
+                justificacio.append(f' perquè vols una recomanació {user['tipus_recomanacio']}')
                 print(justificacio)
                 pass
 
