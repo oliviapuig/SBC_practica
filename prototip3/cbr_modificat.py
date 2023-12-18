@@ -284,7 +284,7 @@ class CBR:
             
             #si el llibre correspon a la pregunta de "quin tipus de recomanació vols?"
             elif llibre == user['llibres_recomanats'][2]:
-                justificacio.append(f' perquè vols una recomanació {user['tipus_recomanacio']}')
+                justificacio.append(f"perquè vols una recomanació {user['tipus_recomanacio']}")
                 print(justificacio)
                 pass
 
