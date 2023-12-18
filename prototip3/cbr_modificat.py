@@ -46,7 +46,7 @@ class CBR:
         distancies = veins.apply(lambda x: self.similarity(user,x,'cosine'),axis=1)
         veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
-        return veins_ordenats[:5] if len(veins_ordenats)>=10 else veins_ordenats
+        return veins_ordenats[:5] if len(veins_ordenats)>=5 else veins_ordenats
     
     def reuse(self, user, users):
         
@@ -284,7 +284,11 @@ class CBR:
             
             #si el llibre correspon a la pregunta de "quin tipus de recomanació vols?"
             elif llibre == user['llibres_recomanats'][2]:
+<<<<<<< Updated upstream
                 justificacio.append(f"perquè vols una recomanació {user['tipus_recomanacio']}")
+=======
+                justificacio.append(f' perquè vols una recomanació {user["tipus_recomanacio"]}')
+>>>>>>> Stashed changes
                 print(justificacio)
                 pass
 
