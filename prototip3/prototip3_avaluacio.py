@@ -5,7 +5,7 @@
 # - Olivia Puig
 # - Marc Ucelayeta
 
-from cbr_uce import CBR
+from cbr_modificat import CBR
 import pickle
 import pandas as pd
 
@@ -29,7 +29,7 @@ for i,cas in casos_nous.iterrows():
     recomanacio = cbr.recomana(cas)
     print('Recomanació final:')
     for llibre in recomanacio.llibres_recomanats:
-        print(books[books.book_id==int(llibre)]['title'].iloc[0])
+        print(books[books.book_id==int(llibre)]['book_id'].iloc[0])
         #cbr.justificacio(cas)
     print('\n')
    
