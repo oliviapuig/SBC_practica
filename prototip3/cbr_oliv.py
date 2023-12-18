@@ -160,7 +160,7 @@ class CBR:
 
         return user
 
-    def revise(self, user, llibres):
+    def revise(self, user):
         """
         Ens quedem amb els 2 llibres amb més puntuació i eliminem puntuacions        
         Mirem la columna de clustering dels 3 llibres recomanats i calculem la similitud de l'usuari amb els llibres del cluster
@@ -195,17 +195,18 @@ class CBR:
         if preferencia_llibre == 'semblants':
             distancies = llibres_del_cluster.apply(lambda x: self.similarity(user, x, 'cosine'), axis=1)
 
-            # Filtra els llibres del cluster segons la preferència de popularitat de l'usuari
-            if preferencia_popularitat == 'bestseller':
-                llibres_recomanats_cluster = llibres_del_cluster[llibres_del_cluster['popular'] == True]
-            elif preferencia_popularitat == 'no tan popular':
-                llibres_recomanats_cluster = llibres_del_cluster[llibres_del_cluster['popular'] == False]
-            else:
-                print("Opció no vàlida per preferencia_popularitat. Si us plau, respon 'bestseller' o 'no tan popular'.")
-                return user
+            # Obté l'índex del llibre més semblant dins del cluster
+            index_llibre_mes_semblant = distancies.idxmax()
 
-            # Afegeix un llibre aleatori de la llista filtrada als llibres recomanats de l'usuari
-            user["llibres_recomanats"].append(llibres_recomanats_cluster.sample(1)['book_id'].values[0])
+            # Verifica la popularitat del llibre més semblant
+            popularitat_llibre_mes_semblant = llibres_del_cluster.loc[index_llibre_mes_semblant, 'popular']
+
+            # Filtra els llibres del cluster segons la preferència de popularitat de l'usuari
+            if (preferencia_popularitat == 'bestseller' and popularitat_llibre_mes_semblant == True) or (preferencia_popularitat == 'no tan popular' and popularitat_llibre_mes_semblant == False):
+                # Afegeix el llibre més semblant a la llista de llibres recomanats de l'usuari
+                user["llibres_recomanats"].append(llibres_del_cluster.loc[index_llibre_mes_semblant, 'book_id'])
+            else:
+                print("El llibre més semblant no compleix amb la preferència de popularitat de l'usuari.")
 
         elif preferencia_llibre == 'explorar':
             cluster_usuari = user["cluster"].iloc[0]
@@ -226,7 +227,6 @@ class CBR:
             
             # Afegeix un llibre aleatori de la llista filtrada als llibres recomanats de l'usuari
             user["llibres_recomanats"].append(llibres_recomanats_cluster_mes_proper.sample(1)['book_id'].values[0])
-
 
         else:
             print("Opcions no vàlides. Si us plau, respon 'semblants' o 'explorar'.")
