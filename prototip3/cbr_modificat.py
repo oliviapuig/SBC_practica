@@ -132,16 +132,16 @@ class CBR:
         elif preferencia_llibre == 'explorar' and preferencia_popularitat == 'bestseller':
             cluster_usuari = user["cluster"].iloc[0]
             distancies_cluster = self.clustering.transform(user.vector.reshape(1, -1))
-            cluster_mes_proper = distancies_cluster.argsort()[0][1]
-            user["llibres_recomanats"].append(
-                self.books[self.books['cluster'] == int(cluster_mes_proper)].sample(1)['book_id'].values[0])
+                cluster_mes_proper = distancies_cluster.argsort()[0][1]
+                user["llibres_recomanats"].append(
+                    self.books[self.books['cluster'] == int(cluster_mes_proper)].sample(1)['book_id'].values[0])
 
         elif preferencia_llibre == 'explorar' and preferencia_popularitat == 'no tan popular':
             cluster_usuari = user["cluster"].iloc[0]
             distancies_cluster = self.clustering.transform(user.vector.reshape(1, -1))
-            cluster_mes_proper = distancies_cluster.argsort()[0][1]
-            user["llibres_recomanats"].append(
-                self.books[self.books['cluster'] == int(cluster_mes_proper)].sample(1)['book_id'].values[0])
+                cluster_mes_proper = distancies_cluster.argsort()[0][1]
+                user["llibres_recomanats"].append(
+                    self.books[self.books['cluster'] == int(cluster_mes_proper)].sample(1)['book_id'].values[0])
 
         else:
             print("Opcions no vàlides. Si us plau, respon 'semblants' o 'explorar' i 'bestseller' o 'no tan popular'.")
