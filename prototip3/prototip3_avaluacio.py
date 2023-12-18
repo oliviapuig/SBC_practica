@@ -5,7 +5,7 @@
 # - Olivia Puig
 # - Marc Ucelayeta
 
-from cbr_ruth import CBR
+from cbr_uce import CBR
 import pickle
 import pandas as pd
 
