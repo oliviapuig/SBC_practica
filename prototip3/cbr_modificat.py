@@ -315,7 +315,7 @@ class CBR:
             print('ei nova base amb iteracio\n', self.iteracions)
         #print(self.cases[self.cases.utilitat >0])
         self.iteracions+=1
-        self.justifica(user, users, ll)
+        #self.justifica(user, users, ll)
         return user
     
     def __calculate_optimal_k(self,inertia,k_range):
