@@ -3,7 +3,7 @@ from sklearn.metrics import DistanceMetric
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
-import random
+import pickle
 import pandas as pd
 
 class CBR:
@@ -322,7 +322,6 @@ class CBR:
         self.retain(user, users)
         if self.iteracions%100==0 and self.iteracions!=0 and self.iteracions!=1:
             self.actualitza_base()
-            print('ei nova base amb iteracio\n', self.iteracions) 
         self.iteracions+=1
         return user
     
@@ -362,26 +361,31 @@ class CBR:
             _, indexs = nbrs.kneighbors(vector)
 
             #eliminem els veins que tinguin utilitat 0
-            veins_no_utils = self.cases.loc[indexs.flatten(), 'utilitat'][self.cases['utilitat'] == 0].index
+            veins_no_utils = self.cases.loc[self.cases.index.isin(indexs.flatten().tolist()) & (self.cases['utilitat'] == 0)].index.tolist()
             base_actualitzada = self.cases.drop(veins_no_utils)
 
         if casos_utils.empty:
-            print('Base no actualitzada')
+            print('Base de dades no actualitzada')
             base_actualitzada=self.cases
-        else:
-            print('Base actualitzada')
+        elif not base_actualitzada.equals(self.cases):
+            print('Base de dades actualitzada')
             vectors_actualitzats=list(base_actualitzada.vector)
             wcss = []
             k_range = range(1,11)
             for i in k_range:
-                kmeans = KMeans(n_clusters=i, init='k-means++', random_state=42, n_init=10)
+                kmeans = KMeans(n_clusters=i,  random_state=0, n_init=10)
                 kmeans.fit(vectors_actualitzats)
                 wcss.append(kmeans.inertia_)
 
-            kmeans = KMeans(n_clusters=self.__calculate_optimal_k(wcss, k_range))
+            kmeans = KMeans(n_clusters=self.__calculate_optimal_k(wcss, k_range), random_state=0, n_init=10)
             base_actualitzada.cluster = kmeans.fit_predict(vectors_actualitzats)
             self.clustering = kmeans
-            self.cases = base_actualitzada 
+            self.cases = base_actualitzada
+            with open('./data/clustering/model_clustering_casos_actualitzat.pkl', 'wb') as f:
+                pickle.dump(kmeans, f) 
+            
+            with open('./data/casos_actualitzat.pkl', 'wb') as ff:
+                pickle.dump(base_actualitzada, ff)
         
     def __scale(self, vector, min_ant = 0, max_ant = 5, min_nou = 0, max_nou = 1):
         """
