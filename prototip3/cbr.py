@@ -89,7 +89,6 @@ class CBR:
             usuaris_llibres_recom.append(book_ids[i][1])
         return llibres_recom, usuaris_llibres_recom
     
-
     def revise(self, user, llibres):
         """
         Ens quedem amb els 2 llibres amb més puntuació i eliminem puntuacions        
