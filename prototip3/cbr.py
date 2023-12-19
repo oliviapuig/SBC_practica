@@ -308,12 +308,11 @@ class CBR:
                 llista=list(llibres_dummies.columns[16:]) + ['average_rating'] + ['num_pages'] + unique_genres
                 justificacio.append(f"Perquè t'agraden llibres amb {llista[components[0]].replace('_', ' ')}, {llista[components[1]].replace('_', ' ')} i {llista[components[2]].replace('_', ' ')}")
                 
-                # imprimeix justificacio
+            # imprimeix justificacio
             print('\n'.join(justificacio))
             print('\n')
                         
     def recomana(self, user):
-        # user es un diccionari!!!
         print("-" * 60)
         print("Benvingut al Recomanador de Llibres!")
         print("Descobreix lectures emocionants recomanades només per a tu.")
