@@ -82,10 +82,12 @@ class CBR:
 
         # Guardamos los book_ids de los libros más cercanos
         llibres_recom = []
+        usuaris_llibres_recom = []
+        usuaris = self.cases.loc[[index[0] for index in users]]
         for i in indices[0]:
-            llibres_recom.append(book_ids[i])
-        
-        return llibres_recom
+            llibres_recom.append(book_ids[i][0])
+            usuaris_llibres_recom.append(book_ids[i][1])
+        return llibres_recom, usuaris_llibres_recom
 
     def revise(self, user, llibres):
         """
@@ -194,7 +196,7 @@ class CBR:
             user['puntuacions_llibres'].append(puntuacio)
         return user
     
-    def retain(self, user, users, ll):
+    def retain(self, user, users):
         """
         calculem similitud entre casos SENSE TENIR EN COMPTE RECOMANACIONS
         - si cas molt diferent → ens el quedem
@@ -297,16 +299,15 @@ class CBR:
     def recomana(self, user):
         # user es un diccionari!!!
         users = self.retrieve(user)
-        ll = self.reuse(user, users)
-        user = self.revise(user, ll)
+        llibres_reuse, usuaris_llibres = self.reuse(user, users)
+        user = self.revise(user, llibres_reuse)
         user = self.review(user)
-        self.retain(user, users, ll)
+        self.retain(user, users)
         if self.iteracions%100==0 and self.iteracions!=0 and self.iteracions!=1:
             self.actualitza_base()
             print('ei nova base amb iteracio\n', self.iteracions)
         #print(self.cases[self.cases.utilitat >0])
         self.iteracions+=1
-        self.justifica(user, users, ll)
         return user
     
     def __calculate_optimal_k(self,inertia,k_range):
