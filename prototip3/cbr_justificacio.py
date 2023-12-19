@@ -86,7 +86,7 @@ class CBR:
             llibres_recom.append(book_ids[i])
         
         return llibres_recom
-
+        
     def revise(self, user, llibres):
         """
         Ens quedem amb els 2 llibres amb més puntuació i eliminem puntuacions        
@@ -229,6 +229,7 @@ class CBR:
                     self.cases.append(user, ignore_index=True)
         
         self.utilitat(user, ll, users) # actualitzem utilitat
+        print('llista retain', ll)
 
     def utilitat(self, user, llibres, casos):
         """
@@ -255,7 +256,7 @@ class CBR:
                             self.cases.iloc[k]['utilitat'] += 0.5
             comptador += 1
 
-    def justifica(self, user, users, llibres):
+    def justifica(self, user, users, llibres, llibres_recom):
         casos = users #casos retrieve
         ll = self.reuse(user, users) #llibres reuse
         print('soc dins de la funció')
@@ -264,7 +265,7 @@ class CBR:
             justificacio.append(f'Et recomanem el llibre {self.books.loc[self.books[self.books["book_id"] == int(llibre)].index[0],"title"]}')
             print('soc dins del for')
             # comprovar si el llibre de l'output del reuse i del revise
-            if llibre in ll:
+            if llibre in llibres_recom:
                 justificacio.append('perquè hi ha lectors com tu que els hi agrada!')
                 print('soc dins del if')
             # elif justificant quan el llibre procedeix del chatbot del revise user[motius_recomanacio]
@@ -311,7 +312,7 @@ class CBR:
             print('ei nova base amb iteracio\n', self.iteracions)
         #print(self.cases[self.cases.utilitat >0])
         self.iteracions+=1
-        self.justifica(user, users, ll)
+        self.justifica(user, users, ll, llibres_recom)
         return user
     
     def __calculate_optimal_k(self,inertia,k_range):
