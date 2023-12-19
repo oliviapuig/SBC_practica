@@ -264,39 +264,39 @@ class CBR:
             justificacio.append(f'Et recomanem el llibre {self.books.loc[self.books[self.books["book_id"] == int(llibre)].index[0],"title"]}')
             print('soc dins del for')
             # comprovar si el llibre de l'output del reuse i del revise
-            if llibre in ll and llibre in user['llibres_recomanats']:
+            if llibre in ll:
                 justificacio.append('perquè hi ha lectors com tu que els hi agrada!')
                 print('soc dins del if')
             # elif justificant quan el llibre procedeix del chatbot del revise user[motius_recomanacio]
-            if llibre in user['llibres_recomanats']:
-                print('soc dins del elif')
-                justificacio.append(f"perquè vols una recomanació de {user['motius_recomanacio'][0]} i {user['motius_recomanacio'][1]}")
-                # si pertany al cluster del user
-                if self.books[self.books.book_id==int(llibre)]['cluster'].iloc[0] == user['motius_recomanacio'][2]:
-                    justificacio.append('perquè és un llibre del mateix cluster que el teu')
+                if llibre in user['llibres_recomanats']:
+                    print('soc dins del elif')
+                    justificacio.append(f"perquè vols una recomanació de {user['motius_recomanacio'][0]} i {user['motius_recomanacio'][1]}")
+                    # si pertany al cluster del user
+                    if self.books[self.books.book_id==int(llibre)]['cluster'].iloc[0] == user['motius_recomanacio'][2]:
+                        justificacio.append('perquè és un llibre del mateix cluster que el teu')
+                    else:
+                        justificacio.append('perquè és un llibre d\'un cluster semblant al teu, però un xic més arriscat')
                 else:
-                    justificacio.append('perquè és un llibre d\'un cluster semblant al teu, però un xic més arriscat')
-            else:
-                print('soc dins del else')
-                # si el llibre no és del output del reuse ni del revise
-                # agafem tots els users de la base de dades de casos que hagin llegit aquest llibre
-                # fem la mitjana entre els seus vectors i comparem amb el nostre vector usuari
-                # les tres components més semblants seran les tres caracteristiques que destacarem
-                users_llibre = self.cases[self.cases['llibres_recomanats'].apply(lambda x: llibre in x)]
-                vectors = np.array(users_llibre['vector'].tolist())
-                vector_usuari = user['vector'].reshape(1, -1)
-                distancies = []
-                for i in range(len(vectors)):
-                    distancies.append(self.similarity(user, users_llibre.iloc[i], 'cosine'))
-                distancies = np.array(distancies)
-                indexs = distancies.argsort()[-3:][::-1]
-                caracteristiques = []
-                for i in indexs:
-                    caracteristiques.append(self.books[self.books.book_id==int(llibre)].iloc[0].index[np.argmax(users_llibre.iloc[i]['vector'])])
-                justificacio.append(f"perquè és un llibre que et podria agradar ja que té aquestes 3 caracteristiques: {caracteristiques[0]}, {caracteristiques[1]} i {caracteristiques[2]}")
-            
-            # imprimeix justificacio
-            print(justificacio)
+                    print('soc dins del else')
+                    # si el llibre no és del output del reuse ni del revise
+                    # agafem tots els users de la base de dades de casos que hagin llegit aquest llibre
+                    # fem la mitjana entre els seus vectors i comparem amb el nostre vector usuari
+                    # les tres components més semblants seran les tres caracteristiques que destacarem
+                    users_llibre = self.cases[self.cases['llibres_recomanats'].apply(lambda x: llibre in x)]
+                    vectors = np.array(users_llibre['vector'].tolist())
+                    vector_usuari = user['vector'].reshape(1, -1)
+                    distancies = []
+                    for i in range(len(vectors)):
+                        distancies.append(self.similarity(user, users_llibre.iloc[i], 'cosine'))
+                    distancies = np.array(distancies)
+                    indexs = distancies.argsort()[-3:][::-1]
+                    caracteristiques = []
+                    for i in indexs:
+                        caracteristiques.append(self.books[self.books.book_id==int(llibre)].iloc[0].index[np.argmax(users_llibre.iloc[i]['vector'])])
+                    justificacio.append(f"perquè és un llibre que et podria agradar ja que té aquestes 3 caracteristiques: {caracteristiques[0]}, {caracteristiques[1]} i {caracteristiques[2]}")
+                
+                # imprimeix justificacio
+                print(justificacio)
 
                         
     def recomana(self, user):
