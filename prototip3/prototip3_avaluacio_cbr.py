@@ -9,6 +9,10 @@ from cbr import CBR
 import pickle
 import pandas as pd
 import numpy as np
+import warnings
+
+warnings.filterwarnings("ignore")
+
 
 cases =pd.read_pickle('./data/casos.pkl')
 books = pd.read_pickle('./data/llibres.pkl')

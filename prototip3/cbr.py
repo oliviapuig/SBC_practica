@@ -124,7 +124,7 @@ class CBR:
                 preferencia_popularitat = np.random.choice(['bestseller', 'no tan popular'])
                 print("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ")
                 print(preferencia_llibre,'\n')
-                print("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ")
+                print("Prefereixes llibres populars bestseller o no tan populars? (Bestseller/No tan popular): ")
                 print(preferencia_popularitat,'\n')
             else:
                 preferencia_llibre = input("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()

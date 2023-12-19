@@ -1,45 +1,29 @@
 Title
 ===
-Abstract:xxx
-## Papar Information
-- Title:  `paper name`
-- Authors:  `A`,`B`,`C`
-- Preprint: [https://arxiv.org/abs/xx]()
-- Full-preprint: [paper position]()
-- Video: [video position]()
+`SBC - Pràctica CBR`
+## Paper Information 
+- Authors:  `Aina Gomila`,`Ruth Parajó`,`Olivia Puig`,`Marc Ucelayeta`
 
 ## Install & Dependence
 - python
-- pytorch
+- pandas
 - numpy
-
-## Dataset Preparation
-| Dataset | Download |
-| ---     | ---   |
-| dataset-A | [download]() |
-| dataset-B | [download]() |
-| dataset-C | [download]() |
+- pickle
+- sklearn
 
 ## Use
-- for train
+- Per ús individual
   ```
-  python train.py
+  python prototip3/prototip3.py
   ```
-- for test
+- Per ús avaluatori
   ```
-  python test.py
+  python prototip3/prototip3_avaluacio_temporal.py
+  python prototip3/prototip3_avaluacio_cbr.py
   ```
-## Pretrained model
-| Model | Download |
-| ---     | ---   |
-| Model-1 | [download]() |
-| Model-2 | [download]() |
-| Model-3 | [download]() |
-
 
 ## Directory Hierarchy
 ```
-|—— coses.ipynb
 |—— data
 |    |—— README.md
 |    |—— casos.csv
@@ -56,68 +40,6 @@ Abstract:xxx
 |    |—— llibres.csv
 |    |—— llibres.pkl
 |    |—— scrapping.ipynb
-|—— paperera
-|    |—— casos.csv
-|    |—— casos.pkl
-|    |—— cbr.py
-|    |—— cbr_aina.py
-|    |—— cbr_modificat.py
-|    |—— cbr_oliv.py
-|    |—— cbr_ruth.py
-|    |—— cbr_uce.py
-|    |—— clustering.ipynb
-|    |—— clustering_uce.ipynb
-|    |—— data_fail
-|        |—— books_clean.csv
-|        |—— books_clean.pkl
-|        |—— books_no_preprocessed.csv
-|        |—— preproces_books.py
-|        |—— prova.ipynb
-|        |—— usuaris.csv
-|        |—— usuaris.pkl
-|    |—— eoo
-|        |—— prototip2
-|            |—— cbr 2.py
-|            |—— cbr.py
-|            |—— prototip2 - provesaina
-|                |—— cbr 2.py
-|                |—— cbr.py
-|                |—— clustering_llibres 2.py
-|                |—— clustering_llibres.py
-|                |—— prototip2.ipynb
-|                |—— utils 2.py
-|                |—— utils.py
-|            |—— prototip2.ipynb
-|            |—— utils 2.py
-|            |—— utils.py
-|    |—— generador_usuaris.py
-|    |—— graph.py
-|    |—— llibres.csv
-|    |—— llibres.pkl
-|    |—— prototip2
-|        |—— NN copy.ipynb
-|        |—— NN.ipynb
-|        |—— cbr.py
-|        |—— prediccio_puntuacio.keras
-|        |—— preproces_books.py
-|        |—— utils.py
-|    |—— prototip2 - provesaina
-|        |—— cbr.py
-|        |—— clustering_llibres.py
-|        |—— preproces_books.py
-|        |—— prototip2_aina.ipynb
-|        |—— utils.py
-|    |—— prototip2.ipynb
-|    |—— prototip3-provesaina
-|        |—— cbr.py
-|        |—— prototip3.ipynb
-|        |—— prototip3.py
-|    |—— prototip3.py
-|    |—— prototip3_avaluacio_temporal.ipynb
-|    |—— prototip3_justificacio.py
-|    |—— prototip3_oliv.py
-|    |—— prototip3_uce.py
-|    |—— quee.ipynb
 |—— plots
 |    |—— barplot_bestseller.png
 |    |—— barplot_genres.png
@@ -157,41 +79,31 @@ Abstract:xxx
 |    |—— prototip2.py
 |    |—— utils.py
 |—— prototip3
-|    |—— __pycache__
-|        |—— cbr_aina.cpython-312.pyc
-|        |—— cbr_justificacio.cpython-312.pyc
-|        |—— cbr_modificat.cpython-312.pyc
 |    |—— cbr.py
 |    |—— prototip3.py
 |    |—— prototip3_avaluacio_cbr.py
 |    |—— prototip3_avaluacio_temporal.py
-|    |—— prova.txt
 ```
-## Code Details
-### Tested Platform
-- software
-  ```
-  OS: Debian unstable (May 2021), Ubuntu LTS
-  Python: 3.8.5 (anaconda)
-  PyTorch: 1.7.1, 1.8.1
-  ```
-- hardware
-  ```
-  CPU: Intel Xeon 6226R
-  GPU: Nvidia RTX3090 (24GB)
-  ```
-### Hyper parameters
-```
-```
-## References
-- [paper-1]()
-- [paper-2]()
-- [code-1](https://github.com)
-- [code-2](https://github.com)
+## Content
+### data
+Conté les bases de dades utilitzades com a casos i llibres i el py per la generació sintètica d'aquestes.
+- Clustering
+  Inclou els models de clustering 
   
+
+### plots
+Inclouen tots plots realitzats per l'analisi del recomanador.
+
+### prototip0
+Prototip inicial del recomanador, conté el sistema cbr i l'execució del prototip.
+### prototip1
+Prototip 1 inicial del recomanador, conté el sistema cbr i l'execució del prototip.
+
+### prototip2
+Prototip 2 del recomanador, conté el sistema cbr i l'execució del prototip.
+### prototip3
+Prototip final del recomanador, conté el sistema cbr i l'execució del prototip.
+
 ## License
 
-## Citing
-If you use xxx,please use the following BibTeX entry.
-```
-```
+Universitat Politècnica de Catalunya
