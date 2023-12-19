@@ -284,11 +284,8 @@ class CBR:
             
             #si el llibre correspon a la pregunta de "quin tipus de recomanació vols?"
             elif llibre == user['llibres_recomanats'][2]:
-<<<<<<< Updated upstream
                 justificacio.append(f"perquè vols una recomanació {user['tipus_recomanacio']}")
-=======
                 justificacio.append(f' perquè vols una recomanació {user["tipus_recomanacio"]}')
->>>>>>> Stashed changes
                 print(justificacio)
                 pass
 
