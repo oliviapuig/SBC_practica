@@ -5,7 +5,7 @@
 # - Olivia Puig
 # - Marc Ucelayeta
 
-from cbr_justificacio import CBR
+from cbr import CBR
 import pickle
 import pandas as pd
 import numpy as np
