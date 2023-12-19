@@ -17,7 +17,7 @@ with open('./data/clustering/model_clustering_casos.pkl', 'rb') as arxiu:
     clustering = pickle.load(arxiu)
 
 tipus = 'automatic'
-tipus = None   
+#tipus = None   
 if tipus == 'automatic':
     casos_nous = cases.iloc[:102]
     cases = cases.iloc[102:]

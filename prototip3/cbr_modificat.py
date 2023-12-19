@@ -3,7 +3,7 @@ from sklearn.metrics import DistanceMetric
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
-import random
+import pickle
 import pandas as pd
 
 class CBR:
@@ -104,7 +104,6 @@ class CBR:
                 if ll['book_id'] not in llibres and ll['book_id'] not in user["llibres_usuari"]: # Si no esta recomanat i no l'ha llegit l'usuari
                     if len(llibres) == 3:
                         if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_recomanat, "cosine"):
-                            print('he entrat')
                             llibres[llibres.index(llibre)] = ll['book_id']  # Canviem el llibre recomanat per un altre del cluster
                             llibre_recomanat = ll
                             break
@@ -255,34 +254,16 @@ class CBR:
         cases --> llita de tuples --> ('numero_fila_cas', sim)
         """
         llibres, usuaris_llibres = self.reuse(user, casos)
-          #llibres = llista book_id de llibres del reuse
-          #usuaris_llibres = llista user_id de casos els llibres dels quals passen el reuse
-        print(llibres)
-        print(usuaris_llibres)
-        #print(type(self.cases.loc[0]['user_id']))
-
-        print('utilitat',self.cases[self.cases.user_id.isin(usuaris_llibres)]['utilitat'])
-        #self.cases.loc[self.cases.user_id.isin(usuaris_llibres),'utilitat'] += 0.5
-        #print('utilitattt',self.cases[self.cases.user_id.isin(usuaris_llibres)]['utilitat'])
-
         comptador = 0
         for llibre in llibres: #si el llibre ha passat la fase reuse
             for usuari in usuaris_llibres:
-              print('he entrat bucle usuari', usuari)
-              print('llibre que avaluem', llibre)
-              print('llibres recomanats de cas similar', self.cases[self.cases.user_id == usuari]['llibres_recomanats'].iloc[0])
-              print('si el llibre que avaluem està dins els recomanats', llibre in self.cases[self.cases.user_id == usuari]['llibres_recomanats'])
               llibreees = self.cases[self.cases.user_id == usuari]['llibres_recomanats'].iloc[0]
               if str(llibre) in llibreees:
-                print('he entrat reuse')
                 self.cases.loc[self.cases.user_id == usuari,'utilitat'] += 0.5
                 if str(llibre) in user['llibres_recomanats']:
-                  print('he entrat revise')
                   self.cases.loc[self.cases.user_id == usuari,'utilitat'] += 0.5
                   if user['puntuacions_llibres'][comptador] == 1 or user['puntuacions_llibres'][comptador] == 5: #si el llibre recomanat ha rebut una valoracio de 1<x<2 o 4<x<5
-                    print('he entrat review')
                     self.cases.loc[self.cases.user_id == usuari,'utilitat'] += 0.5
-              print('utilitat final', self.cases[self.cases.user_id == usuari]['utilitat'])
             comptador += 1
 
     def justifica(self, user, users, llibres):
@@ -349,8 +330,6 @@ class CBR:
         self.retain(user, users)
         if self.iteracions%100==0 and self.iteracions!=0 and self.iteracions!=1:
             self.actualitza_base()
-            print('ei nova base amb iteracio\n', self.iteracions)
-        #print(self.cases[self.cases.utilitat >0])
         self.iteracions+=1
         return user
     
@@ -390,27 +369,31 @@ class CBR:
             _, indexs = nbrs.kneighbors(vector)
 
             #eliminem els veins que tinguin utilitat 0
-
-            veins_no_utils = self.cases.loc[indexs.flatten(), 'utilitat'][self.cases['utilitat'] == 0].index
+            veins_no_utils = self.cases.loc[self.cases.index.isin(indexs.flatten().tolist()) & (self.cases['utilitat'] == 0)].index.tolist()
             base_actualitzada = self.cases.drop(veins_no_utils)
 
         if casos_utils.empty:
-            print('no hi ha nova!!!')
+            print('Base de dades no actualitzada')
             base_actualitzada=self.cases
-        else:
-            print('hi ha nova!!!')
+        elif not base_actualitzada.equals(self.cases):
+            print('Base de dades actualitzada')
             vectors_actualitzats=list(base_actualitzada.vector)
             wcss = []
             k_range = range(1,11)
             for i in k_range:
-                kmeans = KMeans(n_clusters=i, init='k-means++', random_state=42, n_init=10)
+                kmeans = KMeans(n_clusters=i,  random_state=0, n_init=10)
                 kmeans.fit(vectors_actualitzats)
                 wcss.append(kmeans.inertia_)
 
-            kmeans = KMeans(n_clusters=self.__calculate_optimal_k(wcss, k_range))
+            kmeans = KMeans(n_clusters=self.__calculate_optimal_k(wcss, k_range), random_state=0, n_init=10)
             base_actualitzada.cluster = kmeans.fit_predict(vectors_actualitzats)
             self.clustering = kmeans
-            self.cases = base_actualitzada 
+            self.cases = base_actualitzada
+            with open('./data/model_clustering_casos_actualitzat.pkl', 'wb') as f:
+                pickle.dump(kmeans, f) 
+            
+            with open('./data/casos_actualitzat.pkl', 'wb') as ff:
+                pickle.dump(base_actualitzada, ff)
         
     def __scale(self, vector, min_ant = 0, max_ant = 5, min_nou = 0, max_nou = 1):
         """
