@@ -390,7 +390,7 @@ class CBR:
             base_actualitzada.cluster = kmeans.fit_predict(vectors_actualitzats)
             self.clustering = kmeans
             self.cases = base_actualitzada
-            with open('./data/model_clustering_casos_actualitzat.pkl', 'wb') as f:
+            with open('./data/clustering/model_clustering_casos_actualitzat.pkl', 'wb') as f:
                 pickle.dump(kmeans, f) 
             
             with open('./data/casos_actualitzat.pkl', 'wb') as ff:
