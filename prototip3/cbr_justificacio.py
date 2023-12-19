@@ -104,7 +104,6 @@ class CBR:
                 if ll['book_id'] not in llibres and ll['book_id'] not in user["llibres_usuari"]: # Si no esta recomanat i no l'ha llegit l'usuari
                     if len(llibres) == 3:
                         if self.similarity(user, ll, "cosine") > self.similarity(user, llibre_recomanat, "cosine"):
-                            print('he entrat')
                             llibres[llibres.index(llibre)] = ll['book_id']  # Canviem el llibre recomanat per un altre del cluster
                             llibre_recomanat = ll
                             break
@@ -121,11 +120,21 @@ class CBR:
         while continuar:
 
             # Preguntas de preferencias al usuario
-            preferencia_llibre = input("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()
-            preferencia_popularitat = input("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ").lower()
-            #preferencia_llibre = np.random.choice(['semblants', 'explorar'])
-            #preferencia_popularitat = np.random.choice(['bestseller', 'no tan popular'])
-
+            if self.tipus == 'automatic':
+                preferencia_llibre = np.random.choice(['semblants', 'explorar'])
+                preferencia_popularitat = np.random.choice(['bestseller', 'no tan popular'])
+                print("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ")
+                print(preferencia_llibre,'\n')
+                print("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ")
+                print(preferencia_popularitat,'\n')
+            else:
+                preferencia_llibre = input("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()
+                preferencia_popularitat = input("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ").lower()
+            
+            user['motius_recomanacio'] = []
+            user['motius_recomanacio'].append(preferencia_llibre)
+            user['motius_recomanacio'].append(preferencia_popularitat)
+            
             # Lògica per ajustar les recomanacions segons les preferències del usuari
             if preferencia_llibre == 'semblants':
                 if preferencia_popularitat == 'bestseller':
@@ -141,10 +150,10 @@ class CBR:
                     index_llibre_mes_semblant = distancies.idxmax()
                     user["llibres_recomanats"].append(llibres_del_cluster.loc[index_llibre_mes_semblant, 'book_id'])
                     continuar = False
-                    
+
                 else:
                     print("Opció no vàlida per preferencia_popularitat. Si us plau, respon 'bestseller' o 'no tan popular'.")
-
+                    
             elif preferencia_llibre == 'explorar':
                 distancies_cluster = self.clustering.transform(user.vector.reshape(1, -1))
                 cluster_mes_proper = distancies_cluster.argsort()[0][1]
@@ -190,7 +199,7 @@ class CBR:
                     print(puntuacio,'\n')
                 
                 else:
-                    puntuacio = input(f"Quina puntuació li donaries a la recomanació del llibre {self.books.loc[self.books[self.books['book_id'] == int(llibre)].index[0],'title']}? (0-5) ")
+                    puntuacio = int(input(f"Quina puntuació li donaries a la recomanació del llibre {self.books.loc[self.books[self.books['book_id'] == int(llibre)].index[0],'title']}? (0-5) "))
                     print('\n')
 
                 if puntuacio >= 0 and puntuacio <= 5 and isinstance(puntuacio, int):
@@ -251,78 +260,76 @@ class CBR:
         llibres, usuaris_llibres = self.reuse(user, casos)
           #llibres = llista book_id de llibres del reuse
           #usuaris_llibres = llista user_id de casos els llibres dels quals passen el reuse
-        print(llibres)
-        print(usuaris_llibres)
-        #print(type(self.cases.loc[0]['user_id']))
 
-        print('utilitat',self.cases[self.cases.user_id.isin(usuaris_llibres)]['utilitat'])
         #self.cases.loc[self.cases.user_id.isin(usuaris_llibres),'utilitat'] += 0.5
-        #print('utilitattt',self.cases[self.cases.user_id.isin(usuaris_llibres)]['utilitat'])
 
         comptador = 0
         for llibre in llibres: #si el llibre ha passat la fase reuse
             for usuari in usuaris_llibres:
-              print('he entrat bucle usuari', usuari)
-              print('llibre que avaluem', llibre)
-              print('llibres recomanats de cas similar', self.cases[self.cases.user_id == usuari]['llibres_recomanats'].iloc[0])
-              print('si el llibre que avaluem està dins els recomanats', llibre in self.cases[self.cases.user_id == usuari]['llibres_recomanats'])
+              #print('llibres recomanats de cas similar', self.cases[self.cases.user_id == usuari]['llibres_recomanats'].iloc[0])
+              #print('si el llibre que avaluem està dins els recomanats', llibre in self.cases[self.cases.user_id == usuari]['llibres_recomanats'])
               llibreees = self.cases[self.cases.user_id == usuari]['llibres_recomanats'].iloc[0]
               if str(llibre) in llibreees:
-                print('he entrat reuse')
                 self.cases.loc[self.cases.user_id == usuari,'utilitat'] += 0.5
                 if str(llibre) in user['llibres_recomanats']:
-                  print('he entrat revise')
                   self.cases.loc[self.cases.user_id == usuari,'utilitat'] += 0.5
                   if user['puntuacions_llibres'][comptador] == 1 or user['puntuacions_llibres'][comptador] == 5: #si el llibre recomanat ha rebut una valoracio de 1<x<2 o 4<x<5
-                    print('he entrat review')
                     self.cases.loc[self.cases.user_id == usuari,'utilitat'] += 0.5
-              print('utilitat final', self.cases[self.cases.user_id == usuari]['utilitat'])
+              #print('utilitat final', self.cases[self.cases.user_id == usuari]['utilitat'])
             comptador += 1
 
-    def justifica(self, user, users, llibres):
+    def justifica(self, user, users):
         casos = users #casos retrieve
         ll, _ = self.reuse(user, users) #llibres reuse
-        print('soc dins de la funció')
-        print('llibres de ll', ll)
-        print('llires de user', user['llibres_recomanats'])
+        #print('llibres de ll', ll)
+        #print('llires de user', user['llibres_recomanats'])
         for llibre in user['llibres_recomanats']:
             justificacio = []
             justificacio.append(f'Et recomanem el llibre {self.books.loc[self.books[self.books["book_id"] == int(llibre)].index[0],"title"]}')
-            print('soc dins del for')
+            #print('soc dins del for')
             # comprovar si el llibre de l'output del reuse i del revise
             if llibre in ll:
                 justificacio.append('perquè hi ha lectors com tu que els hi agrada!')
-                print('soc dins del if')
+                #print('soc dins del if')
             # elif justificant quan el llibre procedeix del chatbot del revise user[motius_recomanacio]
-                if llibre in user['llibres_recomanats']:
-                    print('soc dins del elif')
-                    justificacio.append(f"perquè vols una recomanació de {user['motius_recomanacio'][0]} i {user['motius_recomanacio'][1]}")
-                    # si pertany al cluster del user
-                    if self.books[self.books.book_id==int(llibre)]['cluster'].iloc[0] == user['motius_recomanacio'][2]:
-                        justificacio.append('perquè és un llibre del mateix cluster que el teu')
-                    else:
-                        justificacio.append('perquè és un llibre d\'un cluster semblant al teu, però un xic més arriscat')
+            elif llibre == user['llibres_recomanats'][2]:
+                #print('soc dins del elif')
+                justificacio.append(f"perquè vols una recomanació de llibres {user['motius_recomanacio'][0]} i {user['motius_recomanacio'][1]}")
+                # si pertany al cluster del user
+                if self.books[self.books.book_id==int(llibre)].iloc[0]['cluster'] == user['cluster']:
+                    justificacio.append('perquè és un llibre del mateix cluster que el teu')
                 else:
-                    print('soc dins del else')
-                    # si el llibre no és del output del reuse ni del revise
-                    # agafem tots els users de la base de dades de casos que hagin llegit aquest llibre
-                    # fem la mitjana entre els seus vectors i comparem amb el nostre vector usuari
-                    # les tres components més semblants seran les tres caracteristiques que destacarem
-                    users_llibre = self.cases[self.cases['llibres_recomanats'].apply(lambda x: llibre in x)]
-                    vectors = np.array(users_llibre['vector'].tolist())
-                    vector_usuari = user['vector'].reshape(1, -1)
-                    distancies = []
-                    for i in range(len(vectors)):
-                        distancies.append(self.similarity(user, users_llibre.iloc[i], 'cosine'))
-                    distancies = np.array(distancies)
-                    indexs = distancies.argsort()[-3:][::-1]
-                    caracteristiques = []
-                    for i in indexs:
-                        caracteristiques.append(self.books[self.books.book_id==int(llibre)].iloc[0].index[np.argmax(users_llibre.iloc[i]['vector'])])
-                    justificacio.append(f"perquè és un llibre que et podria agradar ja que té aquestes 3 caracteristiques: {caracteristiques[0]}, {caracteristiques[1]} i {caracteristiques[2]}")
+                    justificacio.append('perquè és un llibre d\'un altre cluster que el teu')
+            else:
+                # agafem tots els casos que s'hagin llegit aquell llibre
+                #coses = self.cases['llibres_usuari']
+                #print(coses)
+                #casos_llibre = self.cases[coses.apply(lambda x: llibre in x)]
+                #print('casos_llibre', casos_llibre)
+                ## fem la mitjana de tots els seus vectors obtenint un vector mitjà
+                #vector_mitja = np.mean(np.array(casos_llibre['vector'].tolist()), axis=0)
+                ## comparem el vector mitjà amb el vector del nostre cas i mirar component a component quines són les més semblants
+                #print('vector mitja', vector_mitja)
+                #print('vector user', user['vector'])
+                ## agafem els 3 components més semblants
+                #components = np.argsort(vector_mitja - user['vector'])[-3:] # això ens retorna els indexs dels components més semblants
+                #print('components', components)
+                ## afegim a justificació els 3 components més semblants
+                #justificacio.append(f"perquè t'agraden llibres amb {self.books.columns[components[0]]}, {self.books.columns[components[1]]} i {self.books.columns[components[2]]}")
                 
+                # agafem el vector de llibre i el vector del cas
+                vector_llibre = self.books[self.books.book_id==int(llibre)].iloc[0]['vector']
+                vector_user = user['vector']
+                # comparem el vector del llibre amb el vector del cas i mirar component a component quines són les més semblants
+                components = np.argsort(vector_llibre - vector_user)[-3:].tolist() # això ens retorna els indexs dels components més semblants
+                # afegim a justificació els 3 components més semblants
+                print('columneees',self.books.columns,len(self.books.columns),len(vector_user),len(self.books.iloc[0]['vector']))
+                print(components)
+                print('hola columna',self.books.columns[components[0]])
+                justificacio.append(f"perquè t'agraden llibres amb {self.books.columns[components[0]]}, {self.books.columns[components[1]]} i {self.books.columns[components[2]]}")
+          
                 # imprimeix justificacio
-            print(justificacio)
+        print('\n'.join(justificacio))
                         
     def recomana(self, user):
         # user es un diccionari!!!
@@ -335,6 +342,7 @@ class CBR:
             self.actualitza_base()
             print('ei nova base amb iteracio\n', self.iteracions)
         #print(self.cases[self.cases.utilitat >0])
+        self.justifica(user, users)
         self.iteracions+=1
         return user
     
