@@ -17,10 +17,10 @@ with open('./data/clustering/model_clustering_casos.pkl', 'rb') as arxiu:
     clustering = pickle.load(arxiu)
 
 
-cases.at[0, 'llibres_recomanats'] = []
-cases.at[0, 'puntuacions_llibres'] = []
-nou_cas = cases.iloc[0]
-cases=cases.iloc[1:]
+cases.at[1, 'llibres_recomanats'] = []
+cases.at[1, 'puntuacions_llibres'] = []
+nou_cas = cases.iloc[1]
+cases=cases.iloc[2:]
 
 cbr = CBR(cases,clustering,books)
 
