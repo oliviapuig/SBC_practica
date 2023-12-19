@@ -121,16 +121,6 @@ class CBR:
         while continuar:
 
             # Preguntas de preferencias al usuario
-<<<<<<< Updated upstream
-            preferencia_llibre = input("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()
-            preferencia_popularitat = input("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ").lower()
-            #preferencia_llibre = np.random.choice(['semblants', 'explorar'])
-            #preferencia_popularitat = np.random.choice(['bestseller', 'no tan popular'])
-
-=======
-            
-            #preferencia_llibre = input("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()
-            #preferencia_popularitat = input("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ").lower()
             if self.tipus == 'automatic':
                 preferencia_llibre = np.random.choice(['semblants', 'explorar'])
                 preferencia_popularitat = np.random.choice(['bestseller', 'no tan popular'])
@@ -142,7 +132,6 @@ class CBR:
                 preferencia_llibre = input("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()
                 preferencia_popularitat = input("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ").lower()
             
->>>>>>> Stashed changes
             # Lògica per ajustar les recomanacions segons les preferències del usuari
             if preferencia_llibre == 'semblants':
                 if preferencia_popularitat == 'bestseller':
@@ -207,7 +196,7 @@ class CBR:
                     print(puntuacio,'\n')
                 
                 else:
-                    puntuacio = input(f"Quina puntuació li donaries a la recomanació del llibre {self.books.loc[self.books[self.books['book_id'] == int(llibre)].index[0],'title']}? (0-5) ")
+                    puntuacio = int(input(f"Quina puntuació li donaries a la recomanació del llibre {self.books.loc[self.books[self.books['book_id'] == int(llibre)].index[0],'title']}? (0-5) "))
                     print('\n')
 
                 if puntuacio >= 0 and puntuacio <= 5 and isinstance(puntuacio, int):
