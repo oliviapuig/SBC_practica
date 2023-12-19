@@ -83,7 +83,6 @@ class CBR:
         # Guardamos los book_ids de los libros más cercanos
         llibres_recom = []
         usuaris_llibres_recom = []
-        usuaris = self.cases.loc[[index[0] for index in users]]
         for i in indices[0]:
             llibres_recom.append(book_ids[i][0])
             usuaris_llibres_recom.append(book_ids[i][1])
