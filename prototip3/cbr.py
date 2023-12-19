@@ -7,7 +7,7 @@ import random
 import pandas as pd
 
 class CBR:
-    def __init__(self, cases, clustering, books,tipus=None): #cases és el pandas dataframe de casos
+    def __init__(self, cases, clustering, books,tipus=None):
         self.cases = cases
         self.clustering = clustering
         self.books = books
@@ -176,6 +176,7 @@ class CBR:
 
             else:
                 print("Opció no vàlida per preferencia_llibre. Si us plau, respon 'semblants' o 'explorar'.")
+            print('\n')
 
         return user
     
@@ -238,6 +239,7 @@ class CBR:
                     self.cases.append(user, ignore_index=True)
 
         self.utilitat(user, users) # actualitzem utilitat
+
     def utilitat(self, user, casos):
         """
         user = usuari final --> diccionari
@@ -258,16 +260,10 @@ class CBR:
         cases --> llita de tuples --> ('numero_fila_cas', sim)
         """
         llibres, usuaris_llibres = self.reuse(user, casos)
-          #llibres = llista book_id de llibres del reuse
-          #usuaris_llibres = llista user_id de casos els llibres dels quals passen el reuse
-
-        #self.cases.loc[self.cases.user_id.isin(usuaris_llibres),'utilitat'] += 0.5
-
+        
         comptador = 0
         for llibre in llibres: #si el llibre ha passat la fase reuse
             for usuari in usuaris_llibres:
-              #print('llibres recomanats de cas similar', self.cases[self.cases.user_id == usuari]['llibres_recomanats'].iloc[0])
-              #print('si el llibre que avaluem està dins els recomanats', llibre in self.cases[self.cases.user_id == usuari]['llibres_recomanats'])
               llibreees = self.cases[self.cases.user_id == usuari]['llibres_recomanats'].iloc[0]
               if str(llibre) in llibreees:
                 self.cases.loc[self.cases.user_id == usuari,'utilitat'] += 0.5
@@ -275,22 +271,19 @@ class CBR:
                   self.cases.loc[self.cases.user_id == usuari,'utilitat'] += 0.5
                   if user['puntuacions_llibres'][comptador] == 1 or user['puntuacions_llibres'][comptador] == 5: #si el llibre recomanat ha rebut una valoracio de 1<x<2 o 4<x<5
                     self.cases.loc[self.cases.user_id == usuari,'utilitat'] += 0.5
-              #print('utilitat final', self.cases[self.cases.user_id == usuari]['utilitat'])
             comptador += 1
 
     def justifica(self, user, users):
         casos = users #casos retrieve
         ll, _ = self.reuse(user, users) #llibres reuse
-        #print('llibres de ll', ll)
-        #print('llires de user', user['llibres_recomanats'])
+
         for llibre in user['llibres_recomanats']:
             justificacio = []
             justificacio.append(f'Et recomanem el llibre {self.books.loc[self.books[self.books["book_id"] == int(llibre)].index[0],"title"]}')
             justificacio.append('\nJustificació:')
 
-            # elif justificant quan el llibre procedeix del chatbot del revise user[motius_recomanacio]
+            # justificant quan el llibre procedeix del chatbot del revise user[motius_recomanacio]
             if llibre == user['llibres_recomanats'][2]:
-                #print('soc dins del elif')
                 justificacio.append(f"Perquè vols una recomanació de llibres {user['motius_recomanacio'][0]} i {user['motius_recomanacio'][1]}")
                 # si pertany al cluster del user
                 if self.books[self.books.book_id==int(llibre)].iloc[0]['cluster'] == user['cluster']:
@@ -367,15 +360,14 @@ class CBR:
             _, indexs = nbrs.kneighbors(vector)
 
             #eliminem els veins que tinguin utilitat 0
-
             veins_no_utils = self.cases.loc[indexs.flatten(), 'utilitat'][self.cases['utilitat'] == 0].index
             base_actualitzada = self.cases.drop(veins_no_utils)
 
         if casos_utils.empty:
-            print('no hi ha nova!!!')
+            print('Base no actualitzada')
             base_actualitzada=self.cases
         else:
-            print('hi ha nova!!!')
+            print('Base actualitzada')
             vectors_actualitzats=list(base_actualitzada.vector)
             wcss = []
             k_range = range(1,11)
@@ -398,7 +390,6 @@ class CBR:
             vector = np.array([vector])
         if vector.shape[0] > 1:
             min_ant = min(vector)
-            #max_ant = max(vector)
         escalador = MinMaxScaler(feature_range=(min_nou, max_nou))
         escalador.fit([[min_ant], [max_ant]])
         return escalador.transform(vector.reshape(-1, 1)).flatten()

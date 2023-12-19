@@ -5,7 +5,7 @@
 # - Olivia Puig
 # - Marc Ucelayeta
 
-from cbr_modificat import CBR
+from cbr import CBR
 import pickle
 import pandas as pd
 # Libreria para medir el tiempo
@@ -34,7 +34,7 @@ print("AVIS! Aquest script tarda uns 40 minuts en executar-se")
 for recom in r:
     cases_preview = cases.iloc[:recom].copy()
     print("RECOM:", recom)
-    cbr = CBR(cases_preview, clustering, books)
+    cbr = CBR(cases_preview, clustering, books, 'automatic')
     try:
         temps_inici = time.time()
         for i,cas in casos_nous.iterrows():
