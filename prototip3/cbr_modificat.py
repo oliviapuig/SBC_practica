@@ -119,10 +119,10 @@ class CBR:
         while continuar:
 
             # Preguntas de preferencias al usuario
-            #preferencia_llibre = input("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()
-            #preferencia_popularitat = input("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ").lower()
-            preferencia_llibre = np.random.choice(['semblants', 'explorar'])
-            preferencia_popularitat = np.random.choice(['bestseller', 'no tan popular'])
+            preferencia_llibre = input("Prefereixes llibres semblants als llegits o vols explorar? (Semblants/Explorar): ").lower()
+            preferencia_popularitat = input("Prefereixes llibres populars (bestseller) o no tan populars? (Bestseller/No tan popular): ").lower()
+            #preferencia_llibre = np.random.choice(['semblants', 'explorar'])
+            #preferencia_popularitat = np.random.choice(['bestseller', 'no tan popular'])
 
             # Lògica per ajustar les recomanacions segons les preferències del usuari
             if preferencia_llibre == 'semblants':

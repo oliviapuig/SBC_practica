@@ -46,7 +46,7 @@ class CBR:
         distancies = veins.apply(lambda x: self.similarity(user,x,'cosine'),axis=1)
         veins_ordenats = sorted(((index, distancia) for index, distancia in enumerate(distancies)), key=lambda x: x[1])
 
-        return veins_ordenats[:5] if len(veins_ordenats)>=10 else veins_ordenats
+        return veins_ordenats[:5] if len(veins_ordenats)>=5 else veins_ordenats
     
     def reuse(self, user, users):
         
@@ -86,7 +86,7 @@ class CBR:
             llibres_recom.append(book_ids[i])
         
         return llibres_recom
-        
+
     def revise(self, user, llibres):
         """
         Ens quedem amb els 2 llibres amb més puntuació i eliminem puntuacions        
@@ -162,16 +162,10 @@ class CBR:
                 # Afegeix un llibre aleatori de la llista filtrada als llibres recomanats de l'usuari
                 user["llibres_recomanats"].append(llibres_recomanats_cluster_mes_proper.sample(1)['book_id'].values[0])
                 continuar = False
-            
+
             else:
                 print("Opció no vàlida per preferencia_llibre. Si us plau, respon 'semblants' o 'explorar'.")
 
-        # posar en una llista els motius de la recomanació
-        user['motius_recomanacio'] = []
-        user['motius_recomanacio'].append(preferencia_llibre)
-        user['motius_recomanacio'].append(preferencia_popularitat)
-        user['motius_recomanacio'].append(cluster)
-        
         return user
     
     def review(self, user):
@@ -229,7 +223,6 @@ class CBR:
                     self.cases.append(user, ignore_index=True)
         
         self.utilitat(user, ll, users) # actualitzem utilitat
-        print('llista retain', ll)
 
     def utilitat(self, user, llibres, casos):
         """
@@ -256,16 +249,18 @@ class CBR:
                             self.cases.iloc[k]['utilitat'] += 0.5
             comptador += 1
 
-    def justifica(self, user, users, llibres, llibres_recom):
+    def justifica(self, user, users, llibres):
         casos = users #casos retrieve
-        ll = self.reuse(user, users) #llibres reuse
+        ll, _ = self.reuse(user, users) #llibres reuse
         print('soc dins de la funció')
+        print('llibres de ll', ll)
+        print('llires de user', user['llibres_recomanats'])
         for llibre in user['llibres_recomanats']:
             justificacio = []
             justificacio.append(f'Et recomanem el llibre {self.books.loc[self.books[self.books["book_id"] == int(llibre)].index[0],"title"]}')
             print('soc dins del for')
             # comprovar si el llibre de l'output del reuse i del revise
-            if llibre in llibres_recom:
+            if llibre in ll:
                 justificacio.append('perquè hi ha lectors com tu que els hi agrada!')
                 print('soc dins del if')
             # elif justificant quan el llibre procedeix del chatbot del revise user[motius_recomanacio]
@@ -297,8 +292,7 @@ class CBR:
                     justificacio.append(f"perquè és un llibre que et podria agradar ja que té aquestes 3 caracteristiques: {caracteristiques[0]}, {caracteristiques[1]} i {caracteristiques[2]}")
                 
                 # imprimeix justificacio
-                print(justificacio)
-
+            print(justificacio)
                         
     def recomana(self, user):
         # user es un diccionari!!!
@@ -312,7 +306,7 @@ class CBR:
             print('ei nova base amb iteracio\n', self.iteracions)
         #print(self.cases[self.cases.utilitat >0])
         self.iteracions+=1
-        self.justifica(user, users, ll, llibres_recom)
+        self.justifica(user, users, ll)
         return user
     
     def __calculate_optimal_k(self,inertia,k_range):
