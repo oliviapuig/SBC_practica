@@ -326,6 +326,7 @@ class CBR:
         users = self.retrieve(user)
         llibres_reuse, _ = self.reuse(user, users)
         user = self.revise(user, llibres_reuse)
+        self.justifica(user, users)
         user = self.review(user)
         self.retain(user, users)
         if self.iteracions%100==0 and self.iteracions!=0 and self.iteracions!=1:

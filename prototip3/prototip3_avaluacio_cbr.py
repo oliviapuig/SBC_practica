@@ -35,10 +35,6 @@ if tipus == 'automatic':
     for i,cas in casos_nous.iterrows():
         print('Nou cas',i)
         recomanacio = cbr.recomana(cas)
-        print('Recomanació final:')
-        for llibre in recomanacio.llibres_recomanats:
-            print(books[books.book_id==int(llibre)]['title'].iloc[0])
-            #cbr.justificacio(cas)
         puntuacions.append(recomanacio.puntuacions_llibres)
         llibres_recomanats.append(recomanacio.llibres_recomanats)
         puntuacions_llibres.append(recomanacio.puntuacions_llibres)
@@ -128,6 +124,3 @@ else:
     cbr = CBR(cases,clustering,books)
 
     recomanacio = cbr.recomana(nou_cas)
-    print('\nRecomanació final:')
-    for llibre in recomanacio.llibres_recomanats:
-        print(books[books.book_id==int(llibre)]['title'].iloc[0])
