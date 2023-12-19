@@ -231,12 +231,15 @@ class CBR:
 
         if np.average(similarities) <= 0.6:
             self.cases.loc[len(self.cases)] = user
+            print('Nou cas afegit a la base de dades perquè és molt diferent')
         else:
             for i in range(len(user['puntuacions_llibres'])):
-                if user['puntuacions_llibres'][i] > 2 or user['puntuacions_llibres'][i] < 4:
+                if user['puntuacions_llibres'][i] >= 2 and user['puntuacions_llibres'][i] <= 4:
                     break
                 elif i == len(user['puntuacions_llibres'])-1:
-                    self.cases.append(user, ignore_index=True)
+                    self.cases.loc[len(self.cases)] = user
+                    print('Cas:\n',user)
+                    print('Nou cas afegit a la base de dades')
 
         self.utilitat(user, users) # actualitzem utilitat
 
