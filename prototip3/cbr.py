@@ -314,6 +314,10 @@ class CBR:
                         
     def recomana(self, user):
         # user es un diccionari!!!
+        print("-" * 60)
+        print("Benvingut al Recomanador de Llibres!")
+        print("Descobreix lectures emocionants recomanades només per a tu.")
+        print("-" * 60)
         users = self.retrieve(user)
         llibres_reuse, _ = self.reuse(user, users)
         user = self.revise(user, llibres_reuse)
