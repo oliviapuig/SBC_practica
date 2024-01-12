@@ -21,14 +21,7 @@ books = pd.read_pickle('./data/llibres.pkl')
 with open('./data/clustering/model_clustering_casos.pkl', 'rb') as arxiu:
     clustering = pickle.load(arxiu)
 
-index_cas=random.randint(0,len(cases)) #escollim nou cas de manera random
-cases.at[index_cas, 'llibres_recomanats'] = []
-cases.at[index_cas, 'puntuacions_llibres'] = []
-nou_cas = cases.iloc[index_cas]
-cases = cases.drop(index_cas)
-
 cbr = CBR(cases,clustering,books)
 
-print(nou_cas)
-print(isinstance(nou_cas, pd.Series))
-#recomanacio = cbr.recomana(nou_cas)
+nou_cas = cbr.inicia("prototip3/joc_de_proves.txt")
+recomanacio = cbr.recomana(nou_cas)

@@ -462,7 +462,7 @@ class CBR:
         for i in range(len(db_nou)):
             db_nou.at[i, 'vector'] = np.array(db_nou.at[i, 'vector'])
 
-        return db_nou
+        return db_nou.squeeze()
 
 
             
